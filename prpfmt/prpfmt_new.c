@@ -3,23 +3,24 @@
 #include <string.h>
 #include <tree_sitter/api.h>
 
-// Forward declaration of the tree-sitter-pyrope language function
-TSLanguage *tree_sitter_pyrope();
-char *file_to_string(char *path);
+#include "prpfmt_new.h"
 
 int main(int argc, char **argv) {
+  // Parse CLI arguments
   if (argc < 2) {
-    printf("Argument of type file path expected\n");
+    printf("Argument of type file path expected:\n"
+           "    ./prpfmt <path_to_input_file>\n"
+    );
     return 1;
   }
 
-  char *source_code = file_to_string(argv[1]);
-
-  // Boilerplate for tree-sitter parser initialization
+  // Tree-sitter parser initialization
+  TSLanguage *tree_sitter_pyrope();
   TSParser *parser = ts_parser_new();
   ts_parser_set_language(parser, tree_sitter_pyrope());
 
-  // Parsing the source code
+  // Parse the source code
+  char *source_code = file_to_string(argv[1]);
   TSTree *tree =
       ts_parser_parse_string(parser, NULL, source_code, strlen(source_code));
 
@@ -41,22 +42,37 @@ int main(int argc, char **argv) {
 
 char *file_to_string(char *path) {
   char *buffer;
-
   FILE *fp = fopen(path, "r");
-  if (!fp)
-    perror(path), exit(EXIT_FAILURE);
 
+  // Attempt to open file
+  if (!fp) {
+    perror(path);
+    exit(EXIT_FAILURE);
+  }
+
+  // Determine file size
   fseek(fp, 0L, SEEK_END);
   long l_size = ftell(fp);
   rewind(fp);
 
+  // Allocate memory for file content
   buffer = malloc(l_size + 1);
-  if (!buffer)
-    fclose(fp), fputs("Memory allocation fails", stderr), exit(1);
+  if (!buffer) {
+    fclose(fp);
+    fputs("Memory allocation failed", stderr);
+    exit(EXIT_FAILURE);
+  }
 
-  if (1 != fread(buffer, l_size, 1, fp))
-    fclose(fp), free(buffer), fputs("Read fails", stderr), exit(1);
+  // Read file content into buffer
+  if (1 != fread(buffer, l_size, 1, fp)) {
+    fclose(fp);
+    free(buffer);
+    fputs("File read failed", stderr);
+    exit(EXIT_FAILURE);
+  }
 
+  buffer[l_size] = '\0';
   fclose(fp);
+
   return buffer;
 }
