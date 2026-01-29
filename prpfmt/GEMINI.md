@@ -11,6 +11,7 @@ This project is using prpfmt.c as a starting point.
 ```
 prpfmt_new.c
 prpfmt_new.h
+remove_indent.py
 ```
 - When compiling, navigate to `~/Desktop/Projects/capstone` and run: 
 ```shell
