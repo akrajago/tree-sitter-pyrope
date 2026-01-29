@@ -75,46 +75,48 @@ char *file_to_string(char *path) {
   return buffer;
 }
 
-// Extracts the text content of a given Tree-sitter node from the source code.
 char *get_node_text(TSNode node, const char *source_code) {
+  // Get byte position of text in original code
   uint32_t start_byte = ts_node_start_byte(node);
   uint32_t end_byte = ts_node_end_byte(node);
   uint32_t length = end_byte - start_byte;
 
-  char *text = (char *)malloc(length + 1);
+  // Allocate memory for node text
+  char *text = (char *) malloc(length + 1);
   if (text == NULL) {
     perror("Failed to allocate memory for node text");
     return NULL;
   }
+
+  // Retrieve original text
   strncpy(text, source_code + start_byte, length);
   text[length] = '\0';
+
   return text;
 }
 
-// Traverses the Tree-sitter syntax tree and prints the original text, including whitespace.
 void traverse_and_print(TSNode node, const char *source_code,
                         uint32_t *last_printed_end) {
-  // If it's a leaf node, print its text and any preceding whitespace.
+  // Only print if leaf node
   if (ts_node_child_count(node) == 0) {
     uint32_t start_byte = ts_node_start_byte(node);
-    // Print whitespace between the last printed node and the current node.
+    // Preserve whitespace between last printed node and current node
     for (uint32_t i = *last_printed_end; i < start_byte; ++i) {
       printf("%c", source_code[i]);
     }
 
+    // Get node text and update node pointer
     char *node_text = get_node_text(node, source_code);
     if (node_text) {
       printf("%s", node_text);
       free(node_text);
     }
-    // Update the end position of the last printed node.
     *last_printed_end = ts_node_end_byte(node);
   }
 
-  // Use a tree cursor for efficient traversal of children.
   TSTreeCursor cursor = ts_tree_cursor_new(node);
 
-  // Recursively traverse child nodes.
+  // Recursively traverse child nodes
   if (ts_tree_cursor_goto_first_child(&cursor)) {
     do {
       TSNode current_child_node = ts_tree_cursor_current_node(&cursor);
