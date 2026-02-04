@@ -245,9 +245,9 @@ enum {
   aux_sym_complex_string_literal_repeat1 = 238,
 };
 
-char *file_to_string(char *path);
+
 char *get_node_text(TSNode node, const char *source_code);
-void traverse_and_print(TSNode node, const char *source_code,
+void format_node_recursive(TSNode node, const char *source_code,
                         uint32_t *last_printed_end, FILE *outfile);
 
 #endif // PRP_FMT_H
