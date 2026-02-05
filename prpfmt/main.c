@@ -105,20 +105,11 @@ int main(int argc, char **argv) {
 
   // Parse the source code
   char *source_code = file_to_string(infile_path);
-  TSTree *tree = 
+  TSTree *tree =
       ts_parser_parse_string(parser, NULL, source_code, strlen(source_code));
 
-  // Get the root node of the syntax tree
-  TSNode root_node = ts_tree_root_node(tree);
-
-  uint32_t last_printed_end = 0;
-  uint32_t root_child_count = ts_node_child_count(root_node);
-
-  // Iterate over the root's children
-  for (uint32_t i = 0; i < root_child_count; i++) {
-    TSNode child = ts_node_child(root_node, i);
-    format_node_recursive(child, source_code, &last_printed_end, outfile);
-  }
+  test_print_all_nodes(tree, source_code); // Call the test function to print all nodes
+  print_tree(tree, source_code, outfile);
 
   // Free the memory
   free(source_code);

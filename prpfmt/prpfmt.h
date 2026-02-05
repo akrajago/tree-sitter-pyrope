@@ -247,7 +247,10 @@ enum {
 
 
 char *get_node_text(TSNode node, const char *source_code);
-void format_node_recursive(TSNode node, const char *source_code,
-                        uint32_t *last_printed_end, FILE *outfile);
+void format_node_recursive(TSNode node, const char *source_code, uint32_t *last_printed_end, FILE *outfile);
+void print_statement(TSNode node, const char *source_code, uint32_t *last_printed_end, FILE *outfile);
+void print_tree(TSTree *tree, char *source_code, FILE *outfile);
+void test_print_all_nodes(TSTree *tree, const char *source_code);
+void test_print_all_nodes_recursive(TSNode node, const char *source_code, int indent_level);
 
 #endif // PRP_FMT_H
