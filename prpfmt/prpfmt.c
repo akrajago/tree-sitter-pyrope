@@ -17,6 +17,93 @@ void print_tree(TSTree *tree, char *source_code, FILE *outfile) {
   }
 }
 
+void print_comment(TSNode node, const char *source_code, FILE *outfile) {
+  uint32_t start_byte = ts_node_start_byte(node);
+
+  char *node_text = get_node_text(node, source_code);
+  if (node_text) {
+    fprintf(outfile, "%s", node_text);
+    free(node_text);
+  }
+}
+
+void print_statement(TSNode node, const char *source_code, FILE *outfile) {
+  // Check if comment
+  if (ts_node_grammar_symbol(node) == sym_comment) {
+    print_comment(node, source_code, outfile);
+  } else {
+    fprintf(outfile, "statement\n");
+  }
+}
+
+void print_assignment_or_declaration_statement(TSNode node, const char *source_code, FILE *outfile) {
+  // TODO: Implement formatting for assignment_or_declaration_statement
+}
+
+void print_control_statement(TSNode node, const char *source_code, FILE *outfile) {
+  // TODO: Implement formatting for control_statement
+}
+
+void print_declaration_statement(TSNode node, const char *source_code, FILE *outfile) {
+  // TODO: Implement formatting for declaration_statement
+}
+
+void print_enum_assignment_statement(TSNode node, const char *source_code, FILE *outfile) {
+  // TODO: Implement formatting for enum_assignment_statement
+}
+
+void print_expression_statement(TSNode node, const char *source_code, FILE *outfile) {
+  // TODO: Implement formatting for expression_statement
+}
+
+void print_for_statement(TSNode node, const char *source_code, FILE *outfile) {
+  // TODO: Implement formatting for for_statement
+}
+
+void print_function_call_statement(TSNode node, const char *source_code, FILE *outfile) {
+  // TODO: Implement formatting for function_call_statement
+}
+
+void print_impl_statement(TSNode node, const char *source_code, FILE *outfile) {
+  // TODO: Implement formatting for impl_statement
+}
+
+void print_import_statement(TSNode node, const char *source_code, FILE *outfile) {
+  // TODO: Implement formatting for import_statement
+}
+
+void print_lambda(TSNode node, const char *source_code, FILE *outfile) {
+  // TODO: Implement formatting for lambda
+}
+
+void print_loop_statement(TSNode node, const char *source_code, FILE *outfile) {
+  // TODO: Implement formatting for loop_statement
+}
+
+void print_scope_statement(TSNode node, const char *source_code, FILE *outfile) {
+  // TODO: Implement formatting for scope_statement
+}
+
+void print_test_statement(TSNode node, const char *source_code, FILE *outfile) {
+  // TODO: Implement formatting for test_statement
+}
+
+void print_type_statement(TSNode node, const char *source_code, FILE *outfile) {
+  // TODO: Implement formatting for type_statement
+}
+
+void print_while_statement(TSNode node, const char *source_code, FILE *outfile) {
+  // TODO: Implement formatting for while_statement
+}
+
+void print_assignment(TSNode node, const char *source_code, FILE *outfile) {
+  // TODO: Implement formatting for assignment
+}
+
+void print_enum_assignment(TSNode node, const char *source_code, FILE *outfile) {
+  // TODO: Implement formatting for enum_assignment
+}
+
 void print_arg_item(TSNode node, const char *source_code, FILE *outfile) {
   // TODO: Implement formatting for arg_item
 }
@@ -33,20 +120,12 @@ void print_array_type(TSNode node, const char *source_code, FILE *outfile) {
   // TODO: Implement formatting for array_type
 }
 
-void print_assignment(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for assignment
-}
-
 void print_assignment_delay(TSNode node, const char *source_code, FILE *outfile) {
   // TODO: Implement formatting for assignment_delay
 }
 
 void print_assignment_operator(TSNode node, const char *source_code, FILE *outfile) {
   // TODO: Implement formatting for assignment_operator
-}
-
-void print_assignment_or_declaration_statement(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for assignment_or_declaration_statement
 }
 
 void print_attribute_item(TSNode node, const char *source_code, FILE *outfile) {
@@ -97,16 +176,6 @@ void print_comb_tok(TSNode node, const char *source_code, FILE *outfile) {
   // TODO: Implement formatting for comb_tok
 }
 
-void print_comment(TSNode node, const char *source_code, FILE *outfile) {
-  uint32_t start_byte = ts_node_start_byte(node);
-
-  char *node_text = get_node_text(node, source_code);
-  if (node_text) {
-    fprintf(outfile, "%s", node_text);
-    free(node_text);
-  }
-}
-
 void print_complex_identifier(TSNode node, const char *source_code, FILE *outfile) {
   // TODO: Implement formatting for complex_identifier
 }
@@ -121,14 +190,6 @@ void print_complex_string_literal(TSNode node, const char *source_code, FILE *ou
 
 void print_constant(TSNode node, const char *source_code, FILE *outfile) {
   // TODO: Implement formatting for constant
-}
-
-void print_control_statement(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for control_statement
-}
-
-void print_declaration_statement(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for declaration_statement
 }
 
 void print_delay_tok(TSNode node, const char *source_code, FILE *outfile) {
@@ -147,24 +208,12 @@ void print_dot_expression_type(TSNode node, const char *source_code, FILE *outfi
   // TODO: Implement formatting for dot_expression_type
 }
 
-void print_enum_assignment(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for enum_assignment
-}
-
-void print_enum_assignment_statement(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for enum_assignment_statement
-}
-
 void print_enum_definition(TSNode node, const char *source_code, FILE *outfile) {
   // TODO: Implement formatting for enum_definition
 }
 
 void print_expression_list(TSNode node, const char *source_code, FILE *outfile) {
   // TODO: Implement formatting for expression_list
-}
-
-void print_expression_statement(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for expression_statement
 }
 
 void print_expression_type(TSNode node, const char *source_code, FILE *outfile) {
@@ -179,20 +228,12 @@ void print_for_comprehension(TSNode node, const char *source_code, FILE *outfile
   // TODO: Implement formatting for for_comprehension
 }
 
-void print_for_statement(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for for_statement
-}
-
 void print_func_def_verification(TSNode node, const char *source_code, FILE *outfile) {
   // TODO: Implement formatting for func_def_verification
 }
 
 void print_function_call_expression(TSNode node, const char *source_code, FILE *outfile) {
   // TODO: Implement formatting for function_call_expression
-}
-
-void print_function_call_statement(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for function_call_statement
 }
 
 void print_function_call_type(TSNode node, const char *source_code, FILE *outfile) {
@@ -213,22 +254,6 @@ void print_identifier(TSNode node, const char *source_code, FILE *outfile) {
 
 void print_if_expression(TSNode node, const char *source_code, FILE *outfile) {
   // TODO: Implement formatting for if_expression
-}
-
-void print_impl_statement(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for impl_statement
-}
-
-void print_import_statement(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for import_statement
-}
-
-void print_lambda(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for lambda
-}
-
-void print_loop_statement(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for loop_statement
 }
 
 void print_lvalue_item(TSNode node, const char *source_code, FILE *outfile) {
@@ -283,10 +308,6 @@ void print_ref_identifier(TSNode node, const char *source_code, FILE *outfile) {
   // TODO: Implement formatting for ref_identifier
 }
 
-void print_scope_statement(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for scope_statement
-}
-
 void print_select(TSNode node, const char *source_code, FILE *outfile) {
   // TODO: Implement formatting for select
 }
@@ -303,25 +324,12 @@ void print_sized_integer_type(TSNode node, const char *source_code, FILE *outfil
   // TODO: Implement formatting for sized_integer_type
 }
 
-void print_statement(TSNode node, const char *source_code, FILE *outfile) {
-  // Check if comment
-  if (ts_node_grammar_symbol(node) == sym_comment) {
-    print_comment(node, source_code, outfile);
-  } else {
-    fprintf(outfile, "statement\n"); 
-  }
-}
-
 void print_stmt_list(TSNode node, const char *source_code, FILE *outfile) {
   // TODO: Implement formatting for stmt_list
 }
 
 void print_string_type(TSNode node, const char *source_code, FILE *outfile) {
   // TODO: Implement formatting for string_type
-}
-
-void print_test_statement(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for test_statement
 }
 
 void print_timed_identifier(TSNode node, const char *source_code, FILE *outfile) {
@@ -350,10 +358,6 @@ void print_type_or_identifier(TSNode node, const char *source_code, FILE *outfil
 
 void print_type_specification(TSNode node, const char *source_code, FILE *outfile) {
   // TODO: Implement formatting for type_specification
-}
-
-void print_type_statement(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for type_statement
 }
 
 void print_type_type(TSNode node, const char *source_code, FILE *outfile) {
@@ -386,10 +390,6 @@ void print_var_or_let_or_reg(TSNode node, const char *source_code, FILE *outfile
 
 void print_when_unless_cond(TSNode node, const char *source_code, FILE *outfile) {
   // TODO: Implement formatting for when_unless_cond
-}
-
-void print_while_statement(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for while_statement
 }
 
 void print__binary_number(TSNode node, const char *source_code, FILE *outfile) {
