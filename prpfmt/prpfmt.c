@@ -37,467 +37,467 @@ void print_statement(TSNode node, const char *source_code, FILE *outfile) {
 }
 
 void print_assignment_or_declaration_statement(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for assignment_or_declaration_statement
+    fprintf(outfile, "assignment_or_declaration_statement\n");
 }
 
 void print_control_statement(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for control_statement
+    fprintf(outfile, "control_statement\n");
 }
 
 void print_declaration_statement(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for declaration_statement
+    fprintf(outfile, "declaration_statement\n");
 }
 
 void print_enum_assignment_statement(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for enum_assignment_statement
+    fprintf(outfile, "enum_assignment_statement\n");
 }
 
 void print_expression_statement(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for expression_statement
+    fprintf(outfile, "expression_statement\n");
 }
 
 void print_for_statement(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for for_statement
+    fprintf(outfile, "for_statement\n");
 }
 
 void print_function_call_statement(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for function_call_statement
+    fprintf(outfile, "function_call_statement\n");
 }
 
 void print_impl_statement(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for impl_statement
+    fprintf(outfile, "impl_statement\n");
 }
 
 void print_import_statement(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for import_statement
+    fprintf(outfile, "import_statement\n");
 }
 
 void print_lambda(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for lambda
+    fprintf(outfile, "lambda\n");
 }
 
 void print_loop_statement(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for loop_statement
+    fprintf(outfile, "loop_statement\n");
 }
 
 void print_scope_statement(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for scope_statement
+    fprintf(outfile, "scope_statement\n");
 }
 
 void print_test_statement(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for test_statement
+    fprintf(outfile, "test_statement\n");
 }
 
 void print_type_statement(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for type_statement
+    fprintf(outfile, "type_statement\n");
 }
 
 void print_while_statement(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for while_statement
+    fprintf(outfile, "while_statement\n");
 }
 
 void print_assignment(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for assignment
+    fprintf(outfile, "assignment\n");
 }
 
 void print_enum_assignment(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for enum_assignment
+    fprintf(outfile, "enum_assignment\n");
 }
 
 void print_arg_item(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for arg_item
+    fprintf(outfile, "arg_item\n");
 }
 
 void print_arg_item_list(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for arg_item_list
+    fprintf(outfile, "arg_item_list\n");
 }
 
 void print_arg_list(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for arg_list
+    fprintf(outfile, "arg_list\n");
 }
 
 void print_array_type(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for array_type
+    fprintf(outfile, "array_type\n");
 }
 
 void print_assignment_delay(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for assignment_delay
+    fprintf(outfile, "assignment_delay\n");
 }
 
 void print_assignment_operator(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for assignment_operator
+    fprintf(outfile, "assignment_operator\n");
 }
 
 void print_attribute_item(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for attribute_item
+    fprintf(outfile, "attribute_item\n");
 }
 
 void print_attribute_item_list(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for attribute_item_list
+    fprintf(outfile, "attribute_item_list\n");
 }
 
 void print_attribute_list(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for attribute_list
+    fprintf(outfile, "attribute_list\n");
 }
 
 void print_attributes(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for attributes
+    fprintf(outfile, "attributes\n");
 }
 
 void print_binary_expression(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for binary_expression
+    fprintf(outfile, "binary_expression\n");
 }
 
 void print_bit_select(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for bit_select
+    fprintf(outfile, "bit_select\n");
 }
 
 void print_bit_select_type(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for bit_select_type
+    fprintf(outfile, "bit_select_type\n");
 }
 
 void print_bit_selection(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for bit_selection
+    fprintf(outfile, "bit_selection\n");
 }
 
 void print_boolean_type(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for boolean_type
+    fprintf(outfile, "boolean_type\n");
 }
 
 void print_bounded_integer_type(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for bounded_integer_type
+    fprintf(outfile, "bounded_integer_type\n");
 }
 
 void print_cassert_statement(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for cassert_statement
+    fprintf(outfile, "cassert_statement\n");
 }
 
 void print_comb_tok(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for comb_tok
+    fprintf(outfile, "comb_tok\n");
 }
 
 void print_complex_identifier(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for complex_identifier
+    fprintf(outfile, "complex_identifier\n");
 }
 
 void print_complex_identifier_list(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for complex_identifier_list
+    fprintf(outfile, "complex_identifier_list\n");
 }
 
 void print_complex_string_literal(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for complex_string_literal
+    fprintf(outfile, "complex_string_literal\n");
 }
 
 void print_constant(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for constant
+    fprintf(outfile, "constant\n");
 }
 
 void print_delay_tok(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for delay_tok
+    fprintf(outfile, "delay_tok\n");
 }
 
 void print_description(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for description
+    fprintf(outfile, "description\n");
 }
 
 void print_dot_expression(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for dot_expression
+    fprintf(outfile, "dot_expression\n");
 }
 
 void print_dot_expression_type(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for dot_expression_type
+    fprintf(outfile, "dot_expression_type\n");
 }
 
 void print_enum_definition(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for enum_definition
+    fprintf(outfile, "enum_definition\n");
 }
 
 void print_expression_list(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for expression_list
+    fprintf(outfile, "expression_list\n");
 }
 
 void print_expression_type(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for expression_type
+    fprintf(outfile, "expression_type\n");
 }
 
 void print_flow_tok(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for flow_tok
+    fprintf(outfile, "flow_tok\n");
 }
 
 void print_for_comprehension(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for for_comprehension
+    fprintf(outfile, "for_comprehension\n");
 }
 
 void print_func_def_verification(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for func_def_verification
+    fprintf(outfile, "func_def_verification\n");
 }
 
 void print_function_call_expression(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for function_call_expression
+    fprintf(outfile, "function_call_expression\n");
 }
 
 void print_function_call_type(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for function_call_type
+    fprintf(outfile, "function_call_type\n");
 }
 
 void print_function_definition(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for function_definition
+    fprintf(outfile, "function_definition\n");
 }
 
 void print_function_definition_decl(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for function_definition_decl
+    fprintf(outfile, "function_definition_decl\n");
 }
 
 void print_identifier(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for identifier
+    fprintf(outfile, "identifier\n");
 }
 
 void print_if_expression(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for if_expression
+    fprintf(outfile, "if_expression\n");
 }
 
 void print_lvalue_item(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for lvalue_item
+    fprintf(outfile, "lvalue_item\n");
 }
 
 void print_lvalue_list(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for lvalue_list
+    fprintf(outfile, "lvalue_list\n");
 }
 
 void print_match_expression(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for match_expression
+    fprintf(outfile, "match_expression\n");
 }
 
 void print_match_list(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for match_list
+    fprintf(outfile, "match_list\n");
 }
 
 void print_match_operator(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for match_operator
+    fprintf(outfile, "match_operator\n");
 }
 
 void print_member_select(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for member_select
+    fprintf(outfile, "member_select\n");
 }
 
 void print_member_selection(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for member_selection
+    fprintf(outfile, "member_selection\n");
 }
 
 void print_module_path(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for module_path
+    fprintf(outfile, "module_path\n");
 }
 
 void print_optional_expression(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for optional_expression
+    fprintf(outfile, "optional_expression\n");
 }
 
 void print_pipe_tok(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for pipe_tok
+    fprintf(outfile, "pipe_tok\n");
 }
 
 void print_primitive_type(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for primitive_type
+    fprintf(outfile, "primitive_type\n");
 }
 
 void print_range_type(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for range_type
+    fprintf(outfile, "range_type\n");
 }
 
 void print_ref_identifier(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for ref_identifier
+    fprintf(outfile, "ref_identifier\n");
 }
 
 void print_select(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for select
+    fprintf(outfile, "select\n");
 }
 
 void print_select_options(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for select_options
+    fprintf(outfile, "select_options\n");
 }
 
 void print_selection(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for selection
+    fprintf(outfile, "selection\n");
 }
 
 void print_sized_integer_type(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for sized_integer_type
+    fprintf(outfile, "sized_integer_type\n");
 }
 
 void print_stmt_list(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for stmt_list
+    fprintf(outfile, "stmt_list\n");
 }
 
 void print_string_type(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for string_type
+    fprintf(outfile, "string_type\n");
 }
 
 void print_timed_identifier(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for timed_identifier
+    fprintf(outfile, "timed_identifier\n");
 }
 
 void print_tuple(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for tuple
+    fprintf(outfile, "tuple\n");
 }
 
 void print_tuple_list(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for tuple_list
+    fprintf(outfile, "tuple_list\n");
 }
 
 void print_tuple_sq(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for tuple_sq
+    fprintf(outfile, "tuple_sq\n");
 }
 
 void print_type_cast(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for type_cast
+    fprintf(outfile, "type_cast\n");
 }
 
 void print_type_or_identifier(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for type_or_identifier
+    fprintf(outfile, "type_or_identifier\n");
 }
 
 void print_type_specification(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for type_specification
+    fprintf(outfile, "type_specification\n");
 }
 
 void print_type_type(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for type_type
+    fprintf(outfile, "type_type\n");
 }
 
 void print_typed_declaration(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for typed_declaration
+    fprintf(outfile, "typed_declaration\n");
 }
 
 void print_typed_identifier(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for typed_identifier
+    fprintf(outfile, "typed_identifier\n");
 }
 
 void print_typed_identifier_list(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for typed_identifier_list
+    fprintf(outfile, "typed_identifier_list\n");
 }
 
 void print_unary_expression(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for unary_expression
+    fprintf(outfile, "unary_expression\n");
 }
 
 void print_unsized_integer_type(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for unsized_integer_type
+    fprintf(outfile, "unsized_integer_type\n");
 }
 
 void print_var_or_let_or_reg(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for var_or_let_or_reg
+    fprintf(outfile, "var_or_let_or_reg\n");
 }
 
 void print_when_unless_cond(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for when_unless_cond
+    fprintf(outfile, "when_unless_cond\n");
 }
 
 void print__binary_number(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for _binary_number
+    fprintf(outfile, "_binary_number\n");
 }
 
 void print__bool_literal(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for _bool_literal
+    fprintf(outfile, "_bool_literal\n");
 }
 
 void print__decimal_number(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for _decimal_number
+    fprintf(outfile, "_decimal_number\n");
 }
 
 void print__expression(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for _expression
+    fprintf(outfile, "_expression\n");
 }
 
 void print__expression_with_comprehension(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for _expression_with_comprehension
+    fprintf(outfile, "_expression_with_comprehension\n");
 }
 
 void print__hex_number(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for _hex_number
+    fprintf(outfile, "_hex_number\n");
 }
 
 void print__neg_binary_number(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for _neg_binary_number
+    fprintf(outfile, "_neg_binary_number\n");
 }
 
 void print__neg_decimal_number(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for _neg_decimal_number
+    fprintf(outfile, "_neg_decimal_number\n");
 }
 
 void print__neg_hex_number(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for _neg_hex_number
+    fprintf(outfile, "_neg_hex_number\n");
 }
 
 void print__neg_octal_number(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for _neg_octal_number
+    fprintf(outfile, "_neg_octal_number\n");
 }
 
 void print__neg_scaled_number(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for _neg_scaled_number
+    fprintf(outfile, "_neg_scaled_number\n");
 }
 
 void print__neg_simple_number(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for _neg_simple_number
+    fprintf(outfile, "_neg_simple_number\n");
 }
 
 void print__neg_typed_number(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for _neg_typed_number
+    fprintf(outfile, "_neg_typed_number\n");
 }
 
 void print__number(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for _number
+    fprintf(outfile, "_number\n");
 }
 
 void print__octal_number(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for _octal_number
+    fprintf(outfile, "_octal_number\n");
 }
 
 void print__restricted_expression(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for _restricted_expression
+    fprintf(outfile, "_restricted_expression\n");
 }
 
 void print__scaled_number(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for _scaled_number
+    fprintf(outfile, "_scaled_number\n");
 }
 
 void print__semicolon(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for _semicolon
+    fprintf(outfile, "_semicolon\n");
 }
 
 void print__simple_number(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for _simple_number
+    fprintf(outfile, "_simple_number\n");
 }
 
 void print__simple_string_literal(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for _simple_string_literal
+    fprintf(outfile, "_simple_string_literal\n");
 }
 
 void print__space(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for _space
+    fprintf(outfile, "_space\n");
 }
 
 void print__string_literal(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for _string_literal
+    fprintf(outfile, "_string_literal\n");
 }
 
 void print__timing_sequence(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for _timing_sequence
+    fprintf(outfile, "_timing_sequence\n");
 }
 
 void print__tuple_item(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for _tuple_item
+    fprintf(outfile, "_tuple_item\n");
 }
 
 void print__type(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for _type
+    fprintf(outfile, "_type\n");
 }
 
 void print__typed_number(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for _typed_number
+    fprintf(outfile, "_typed_number\n");
 }
 
 void print__unknown_literal(TSNode node, const char *source_code, FILE *outfile) {
-  // TODO: Implement formatting for _unknown_literal
+    fprintf(outfile, "_unknown_literal\n");
 }
 
 
