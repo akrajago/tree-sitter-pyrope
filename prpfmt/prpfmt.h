@@ -303,7 +303,6 @@ void print_complex_identifier_list(TSNode node, PrpfmtState *st);
 void print_complex_string_literal(TSNode node, PrpfmtState *st);
 void print_constant(TSNode node, PrpfmtState *st);
 void print_delay_tok(TSNode node, PrpfmtState *st);
-void print_description(TSNode node, PrpfmtState *st);
 void print_dot_expression(TSNode node, PrpfmtState *st);
 void print_dot_expression_type(TSNode node, PrpfmtState *st);
 void print_enum_definition(TSNode node, PrpfmtState *st);

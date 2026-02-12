@@ -27,6 +27,9 @@ void print_comment_inline(TSNode node, PrpfmtState *st) {
   char *node_text = get_node_text(node, st->source_code);
   if (node_text) {
     fprintf(st->outfile, " %s", node_text);
+    if (strncmp(node_text, "//", 2) == 0) {
+      fprintf(st->outfile, "\n");
+    }
     free(node_text);
   }
 }
@@ -132,15 +135,96 @@ void print_assignment_or_declaration_statement(TSNode node, PrpfmtState *st) {
 }
 
 void print_control_statement(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "control_statement\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+    const char *field_name = ts_node_field_name_for_child(node, i);
+
+    if (field_name && strcmp(field_name, "argument") == 0) {
+      fprintf(st->outfile, " ");
+      print__expression_with_comprehension(child, st);
+      continue;
+    }
+
+    switch (symbol) {
+      case anon_sym_continue:
+        fprintf(st->outfile, "continue");
+        break;
+      case anon_sym_break:
+        fprintf(st->outfile, "break");
+        break;
+      case anon_sym_return:
+        fprintf(st->outfile, "return");
+        break;
+      case sym_when_unless_cond:
+      case anon_sym_SEMI:
+      case sym__automatic_semicolon:
+        print__semicolon(child, st);
+        break;
+      case sym_comment:
+        print_comment_inline(child, st);
+        break;
+    }
+  }
 }
 
 void print_declaration_statement(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "declaration_statement\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    const char *field_name = ts_node_field_name_for_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    if (field_name) {
+      if (strcmp(field_name, "decl") == 0) {
+        print_var_or_let_or_reg(child, st);
+        fprintf(st->outfile, " ");
+        continue;
+      }
+      if (strcmp(field_name, "lvalue") == 0) {
+        if (symbol == sym_typed_identifier_list) {
+          print_typed_identifier_list(child, st);
+        } else {
+          print_typed_identifier(child, st);
+        }
+        continue;
+      }
+    }
+
+    switch (symbol) {
+      case anon_sym_LPAREN:
+        fprintf(st->outfile, "(");
+        break;
+      case anon_sym_RPAREN:
+        fprintf(st->outfile, ")");
+        break;
+      case sym_when_unless_cond:
+      case anon_sym_SEMI:
+      case sym__automatic_semicolon:
+        print__semicolon(child, st);
+        break;
+      case sym_comment:
+        print_comment_inline(child, st);
+        break;
+    }
+  }
 }
 
 void print_enum_assignment_statement(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "enum_assignment_statement\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    if (symbol == sym_enum_assignment) {
+      print_enum_assignment(child, st);
+    } else if (symbol == sym_when_unless_cond || symbol == anon_sym_SEMI || symbol == sym__automatic_semicolon) {
+      print__semicolon(child, st);
+    } else if (symbol == sym_comment) {
+      print_comment_inline(child, st);
+    }
+  }
 }
 
 void print_expression_statement(TSNode node, PrpfmtState *st) {
@@ -170,7 +254,74 @@ void print_expression_statement(TSNode node, PrpfmtState *st) {
 }
 
 void print_for_statement(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "for_statement\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    const char *field_name = ts_node_field_name_for_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    if (field_name) {
+      if (strcmp(field_name, "attributes") == 0) {
+        fprintf(st->outfile, "::");
+        print_attribute_list(child, st);
+        continue;
+      }
+      if (strcmp(field_name, "init") == 0) {
+        uint32_t cc2 = ts_node_child_count(child);
+        for (uint32_t j = 0; j < cc2; j++) {
+          TSNode c2 = ts_node_child(child, j);
+          TSSymbol s2 = ts_node_grammar_symbol(c2);
+          if (s2 == sym_stmt_list) {
+            print_stmt_list(c2, st);
+          } else if (s2 == anon_sym_SEMI) {
+            fprintf(st->outfile, " ; ");
+          }
+        }
+        continue;
+      }
+      if (strcmp(field_name, "index") == 0) {
+        if (symbol == sym_typed_identifier_list) {
+          print_typed_identifier_list(child, st);
+        } else {
+          print_typed_identifier(child, st);
+        }
+        continue;
+      }
+      if (strcmp(field_name, "data") == 0) {
+        print_expression_list(child, st);
+        continue;
+      }
+      if (strcmp(field_name, "code") == 0) {
+        fprintf(st->outfile, " ");
+        print_scope_statement(child, st);
+        continue;
+      }
+    }
+
+    switch (symbol) {
+      case anon_sym_for:
+        fprintf(st->outfile, "for ");
+        break;
+      case anon_sym_LPAREN:
+        fprintf(st->outfile, "(");
+        break;
+      case anon_sym_RPAREN:
+        fprintf(st->outfile, ")");
+        break;
+      case anon_sym_in:
+        fprintf(st->outfile, " in ");
+        break;
+      case sym_typed_identifier:
+        print_typed_identifier(child, st);
+        break;
+      case sym_ref_identifier:
+        print_ref_identifier(child, st);
+        break;
+      case sym_comment:
+        print_comment_inline(child, st);
+        break;
+    }
+  }
 }
 
 void print_function_call_statement(TSNode node, PrpfmtState *st) {
@@ -203,19 +354,156 @@ void print_function_call_statement(TSNode node, PrpfmtState *st) {
 }
 
 void print_impl_statement(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "impl_statement\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    const char *field_name = ts_node_field_name_for_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    if (field_name) {
+      if (strcmp(field_name, "trait_name") == 0 || strcmp(field_name, "type_name") == 0) {
+        print_identifier(child, st);
+        continue;
+      }
+      if (strcmp(field_name, "implementation") == 0) {
+        print_tuple(child, st);
+        continue;
+      }
+    }
+
+    switch (symbol) {
+      case anon_sym_impl:
+        fprintf(st->outfile, "impl ");
+        break;
+      case anon_sym_for:
+        fprintf(st->outfile, " for ");
+        break;
+      case sym_when_unless_cond:
+      case anon_sym_SEMI:
+      case sym__automatic_semicolon:
+        print__semicolon(child, st);
+        break;
+      case sym_comment:
+        print_comment_inline(child, st);
+        break;
+    }
+  }
 }
 
 void print_import_statement(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "import_statement\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    const char *field_name = ts_node_field_name_for_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    if (field_name) {
+      if (strcmp(field_name, "module") == 0) {
+        if (symbol == sym_module_path) {
+          print_module_path(child, st);
+        } else {
+          print__string_literal(child, st);
+        }
+        continue;
+      }
+      if (strcmp(field_name, "alias") == 0) {
+        print_identifier(child, st);
+        continue;
+      }
+    }
+
+    switch (symbol) {
+      case anon_sym_import:
+        fprintf(st->outfile, "import ");
+        break;
+      case anon_sym_as:
+        fprintf(st->outfile, " as ");
+        break;
+      case sym_when_unless_cond:
+      case anon_sym_SEMI:
+      case sym__automatic_semicolon:
+        print__semicolon(child, st);
+        break;
+      case sym_comment:
+        print_comment_inline(child, st);
+        break;
+    }
+  }
 }
 
 void print_lambda(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "lambda\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    const char *field_name = ts_node_field_name_for_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    if (field_name) {
+      if (strcmp(field_name, "func_type") == 0) {
+        switch (symbol) {
+          case sym_comb_tok:
+            print_comb_tok(child, st);
+            break;
+          case sym_pipe_tok:
+            print_pipe_tok(child, st);
+            break;
+          case sym_flow_tok:
+            print_flow_tok(child, st);
+            break;
+        }
+        fprintf(st->outfile, " ");
+        continue;
+      }
+      if (strcmp(field_name, "name") == 0) {
+        print_identifier(child, st);
+        continue;
+      }
+      if (strcmp(field_name, "code") == 0) {
+        fprintf(st->outfile, " ");
+        print_scope_statement(child, st);
+        continue;
+      }
+    }
+
+    if (symbol == sym_function_definition_decl) {
+      print_function_definition_decl(child, st);
+    }
+  }
 }
 
 void print_loop_statement(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "loop_statement\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    const char *field_name = ts_node_field_name_for_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    if (field_name) {
+      if (strcmp(field_name, "attributes") == 0) {
+        fprintf(st->outfile, "::");
+        print_attribute_list(child, st);
+        continue;
+      }
+      if (strcmp(field_name, "init") == 0) {
+        print_stmt_list(child, st);
+        continue;
+      }
+      if (strcmp(field_name, "code") == 0) {
+        fprintf(st->outfile, " ");
+        print_scope_statement(child, st);
+        continue;
+      }
+    }
+
+    switch (symbol) {
+      case anon_sym_loop:
+        fprintf(st->outfile, "loop ");
+        break;
+      case sym_comment:
+        print_comment_inline(child, st);
+        break;
+    }
+  }
 }
 
 void print_scope_statement(TSNode node, PrpfmtState *st) {
@@ -245,15 +533,155 @@ void print_scope_statement(TSNode node, PrpfmtState *st) {
 }
 
 void print_test_statement(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "test_statement\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    const char *field_name = ts_node_field_name_for_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    if (field_name) {
+      if (strcmp(field_name, "args") == 0) {
+        fprintf(st->outfile, " ");
+        print_expression_list(child, st);
+        continue;
+      }
+      if (strcmp(field_name, "condition") == 0) {
+        // Handle flattened optseq('where', $.expression_list)
+        uint32_t cc2 = ts_node_child_count(child);
+        for (uint32_t j = 0; j < cc2; j++) {
+          TSNode c2 = ts_node_child(child, j);
+          TSSymbol s2 = ts_node_grammar_symbol(c2);
+          if (s2 == anon_sym_where) {
+            fprintf(st->outfile, " where ");
+          } else if (s2 == sym_expression_list) {
+            print_expression_list(c2, st);
+          }
+        }
+        continue;
+      }
+      if (strcmp(field_name, "code") == 0) {
+        fprintf(st->outfile, " ");
+        print_scope_statement(child, st);
+        continue;
+      }
+    }
+
+    switch (symbol) {
+      case anon_sym_test:
+        fprintf(st->outfile, "test");
+        break;
+      case sym_comment:
+        print_comment_inline(child, st);
+        break;
+    }
+  }
 }
 
 void print_type_statement(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "type_statement\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    const char *field_name = ts_node_field_name_for_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    if (field_name) {
+      if (strcmp(field_name, "name") == 0) {
+        print_identifier(child, st);
+        continue;
+      }
+      if (strcmp(field_name, "generic") == 0) {
+        // Handle flattened optseq('<', $.typed_identifier_list, '>')
+        uint32_t cc2 = ts_node_child_count(child);
+        for (uint32_t j = 0; j < cc2; j++) {
+          TSNode c2 = ts_node_child(child, j);
+          TSSymbol s2 = ts_node_grammar_symbol(c2);
+          if (s2 == anon_sym_LT) {
+            fprintf(st->outfile, "<");
+          } else if (s2 == anon_sym_GT) {
+            fprintf(st->outfile, ">");
+          } else if (s2 == sym_typed_identifier_list) {
+            print_typed_identifier_list(c2, st);
+          }
+        }
+        continue;
+      }
+      if (strcmp(field_name, "definition") == 0) {
+        fprintf(st->outfile, " ");
+        print_tuple(child, st);
+        continue;
+      }
+      if (strcmp(field_name, "alias") == 0) {
+        print__type(child, st);
+        continue;
+      }
+    }
+
+    switch (symbol) {
+      case anon_sym_type:
+        fprintf(st->outfile, "type ");
+        break;
+      case anon_sym_EQ:
+        fprintf(st->outfile, " = ");
+        break;
+      case sym_when_unless_cond:
+      case anon_sym_SEMI:
+      case sym__automatic_semicolon:
+        print__semicolon(child, st);
+        break;
+      case sym_comment:
+        print_comment_inline(child, st);
+        break;
+    }
+  }
 }
 
 void print_while_statement(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "while_statement\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    const char *field_name = ts_node_field_name_for_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    if (field_name) {
+      if (strcmp(field_name, "attributes") == 0) {
+        fprintf(st->outfile, "::");
+        print_attribute_list(child, st);
+        continue;
+      }
+      if (strcmp(field_name, "init") == 0) {
+        uint32_t cc2 = ts_node_child_count(child);
+        for (uint32_t j = 0; j < cc2; j++) {
+          TSNode c2 = ts_node_child(child, j);
+          TSSymbol s2 = ts_node_grammar_symbol(c2);
+          if (s2 == sym_stmt_list) {
+            print_stmt_list(c2, st);
+          } else if (s2 == anon_sym_SEMI) {
+            fprintf(st->outfile, " ; ");
+          }
+        }
+        continue;
+      }
+      if (strcmp(field_name, "condition") == 0) {
+        fprintf(st->outfile, " ");
+        print__expression(child, st);
+        continue;
+      }
+      if (strcmp(field_name, "code") == 0) {
+        fprintf(st->outfile, " ");
+        print_scope_statement(child, st);
+        continue;
+      }
+    }
+
+    switch (symbol) {
+      case anon_sym_while:
+        fprintf(st->outfile, "while ");
+        break;
+      case sym_comment:
+        print_comment_inline(child, st);
+        break;
+    }
+  }
 }
 
 void print_assignment(TSNode node, PrpfmtState *st) {
@@ -315,27 +743,191 @@ void print_assignment(TSNode node, PrpfmtState *st) {
 }
 
 void print_enum_assignment(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "enum_assignment\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    const char *field_name = ts_node_field_name_for_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    if (field_name) {
+      if (strcmp(field_name, "name") == 0) {
+        print_identifier(child, st);
+        continue;
+      }
+      if (strcmp(field_name, "values") == 0) {
+        print_tuple(child, st);
+        continue;
+      }
+      if (strcmp(field_name, "body") == 0) {
+        print_arg_list(child, st);
+        continue;
+      }
+    }
+
+    switch (symbol) {
+      case anon_sym_enum:
+        fprintf(st->outfile, "enum ");
+        break;
+      case anon_sym_variant:
+        fprintf(st->outfile, "variant ");
+        break;
+      case anon_sym_EQ:
+        fprintf(st->outfile, " = ");
+        break;
+      case sym_comment:
+        print_comment_inline(child, st);
+        break;
+    }
+  }
 }
 
 void print_arg_item(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "arg_item\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    const char *field_name = ts_node_field_name_for_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    if (field_name) {
+      if (strcmp(field_name, "mod") == 0) {
+        char *text = get_node_text(child, st->source_code);
+        if (text) {
+          fprintf(st->outfile, "%s ", text);
+          free(text);
+        }
+        continue;
+      }
+      if (strcmp(field_name, "definition") == 0) {
+        // Handle flattened optseq('=', $._expression_with_comprehension)
+        uint32_t cc2 = ts_node_child_count(child);
+        for (uint32_t j = 0; j < cc2; j++) {
+          TSNode c2 = ts_node_child(child, j);
+          TSSymbol s2 = ts_node_grammar_symbol(c2);
+          if (s2 == anon_sym_EQ) {
+            fprintf(st->outfile, " = ");
+          } else {
+            print__expression_with_comprehension(c2, st);
+          }
+        }
+        continue;
+      }
+    }
+
+    if (symbol == sym_typed_identifier) {
+      print_typed_identifier(child, st);
+    } else if (symbol == sym_comment) {
+      print_comment_inline(child, st);
+    }
+  }
 }
 
 void print_arg_item_list(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "arg_item_list\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    switch (symbol) {
+      case anon_sym_COMMA:
+        fprintf(st->outfile, ", ");
+        break;
+      case sym_arg_item:
+        print_arg_item(child, st);
+        break;
+      case sym_comment:
+        print_comment_inline(child, st);
+        break;
+    }
+  }
 }
 
 void print_arg_list(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "arg_list\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    switch (symbol) {
+      case anon_sym_LPAREN:
+        fprintf(st->outfile, "(");
+        break;
+      case anon_sym_RPAREN:
+        fprintf(st->outfile, ")");
+        break;
+      case sym_arg_item_list:
+        print_arg_item_list(child, st);
+        break;
+      case sym_comment:
+        print_comment_inline(child, st);
+        break;
+    }
+  }
 }
 
 void print_array_type(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "array_type\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    const char *field_name = ts_node_field_name_for_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    if (field_name) {
+      if (strcmp(field_name, "length") == 0) {
+        print_tuple_sq(child, st);
+        continue;
+      }
+      if (strcmp(field_name, "base") == 0) {
+        switch (symbol) {
+          case sym_primitive_type:
+            print_primitive_type(child, st);
+            break;
+          case sym_array_type:
+            print_array_type(child, st);
+            break;
+          case sym_lambda:
+            print_lambda(child, st);
+            break;
+          case sym_expression_type:
+            print_expression_type(child, st);
+            break;
+        }
+        continue;
+      }
+    }
+
+    if (symbol == sym_comment) {
+      print_comment_inline(child, st);
+    }
+  }
 }
 
 void print_assignment_delay(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "assignment_delay\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    switch (symbol) {
+      case sym_delay_tok:
+        print_delay_tok(child, st);
+        break;
+      case anon_sym_AT:
+        fprintf(st->outfile, "@");
+        break;
+      case anon_sym_LBRACK:
+        fprintf(st->outfile, "[");
+        break;
+      case anon_sym_RBRACK:
+        fprintf(st->outfile, "]");
+        break;
+      case sym_comment:
+        print_comment_inline(child, st);
+        break;
+      default:
+        print__expression(child, st);
+        break;
+    }
+  }
 }
 
 void print_assignment_operator(TSNode node, PrpfmtState *st) {
@@ -347,43 +939,199 @@ void print_assignment_operator(TSNode node, PrpfmtState *st) {
 }
 
 void print_attribute_item(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "attribute_item\n");
+  uint32_t child_count = ts_node_child_count(node);
+  if (child_count == 0) {
+    char *text = get_node_text(node, st->source_code);
+    if (text) {
+      fprintf(st->outfile, "%s", text);
+      free(text);
+    }
+    return;
+  }
+
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    if (symbol == sym_assignment) {
+      print_assignment(child, st);
+    } else if (symbol == sym_comment) {
+      print_comment_inline(child, st);
+    } else {
+      print__expression(child, st);
+    }
+  }
 }
 
 void print_attribute_item_list(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "attribute_item_list\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    switch (symbol) {
+      case anon_sym_COMMA:
+        fprintf(st->outfile, ", ");
+        break;
+      case sym_attribute_item:
+        print_attribute_item(child, st);
+        break;
+      case sym_comment:
+        print_comment_inline(child, st);
+        break;
+    }
+  }
 }
 
 void print_attribute_list(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "attribute_list\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    switch (symbol) {
+      case anon_sym_LBRACK:
+        fprintf(st->outfile, "[");
+        break;
+      case anon_sym_RBRACK:
+        fprintf(st->outfile, "]");
+        break;
+      case sym_attribute_item_list:
+        print_attribute_item_list(child, st);
+        break;
+      case sym_comment:
+        print_comment_inline(child, st);
+        break;
+    }
+  }
 }
 
 void print_attributes(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "attributes\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    if (symbol == anon_sym_COLON) {
+      fprintf(st->outfile, ":");
+    } else if (symbol == sym_attribute_list) {
+      print_attribute_list(child, st);
+    }
+  }
 }
 
 void print_binary_expression(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "binary_expression\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    const char *field_name = ts_node_field_name_for_child(node, i);
+
+    if (field_name) {
+      if (strcmp(field_name, "left") == 0 || strcmp(field_name, "right") == 0) {
+        print__expression(child, st);
+        continue;
+      }
+      if (strcmp(field_name, "operator") == 0) {
+        fprintf(st->outfile, " ");
+        char *text = get_node_text(child, st->source_code);
+        if (text) {
+          fprintf(st->outfile, "%s", text);
+          free(text);
+        }
+        fprintf(st->outfile, " ");
+        continue;
+      }
+    }
+    
+    if (ts_node_child_count(child) == 0) {
+      char *text = get_node_text(child, st->source_code);
+      if (text) {
+        fprintf(st->outfile, "%s", text);
+        free(text);
+      }
+    }
+  }
 }
 
 void print_bit_select(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "bit_select\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+    const char *field_name = ts_node_field_name_for_child(node, i);
+
+    if (field_name && strcmp(field_name, "type") == 0) {
+      print_bit_select_type(child, st);
+      continue;
+    }
+    if (field_name && strcmp(field_name, "select") == 0) {
+      print_select(child, st);
+      continue;
+    }
+
+    if (symbol == anon_sym_POUND) {
+      fprintf(st->outfile, "#");
+    }
+  }
 }
 
 void print_bit_select_type(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "bit_select_type\n");
+  char *text = get_node_text(node, st->source_code);
+  if (text) {
+    fprintf(st->outfile, "%s", text);
+    free(text);
+  }
 }
 
 void print_bit_selection(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "bit_selection\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    if (symbol == sym_bit_select) {
+      print_bit_select(child, st);
+    } else {
+      print__restricted_expression(child, st);
+    }
+  }
 }
 
 void print_boolean_type(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "boolean_type\n");
+  char *text = get_node_text(node, st->source_code);
+  if (text) {
+    fprintf(st->outfile, "%s", text);
+    free(text);
+  }
 }
 
 void print_bounded_integer_type(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "bounded_integer_type\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    const char *field_name = ts_node_field_name_for_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    if (field_name && strcmp(field_name, "constrained") == 0) {
+      uint32_t cc2 = ts_node_child_count(child);
+      for (uint32_t j = 0; j < cc2; j++) {
+        TSNode c2 = ts_node_child(child, j);
+        TSSymbol s2 = ts_node_grammar_symbol(c2);
+        if (s2 == anon_sym_LPAREN) {
+          fprintf(st->outfile, "(");
+        } else if (s2 == anon_sym_RPAREN) {
+          fprintf(st->outfile, ")");
+        } else if (s2 == sym_select_options) {
+          print_select_options(c2, st);
+        }
+      }
+      continue;
+    }
+
+    if (symbol == sym_unsized_integer_type) {
+      print_unsized_integer_type(child, st);
+    }
+  }
 }
 
 void print_cassert_statement(TSNode node, PrpfmtState *st) {
@@ -391,7 +1139,11 @@ void print_cassert_statement(TSNode node, PrpfmtState *st) {
 }
 
 void print_comb_tok(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "comb_tok\n");
+  char *text = get_node_text(node, st->source_code);
+  if (text) {
+    fprintf(st->outfile, "%s", text);
+    free(text);
+  }
 }
 
 void print_complex_identifier(TSNode node, PrpfmtState *st) {
@@ -431,11 +1183,31 @@ void print_complex_identifier(TSNode node, PrpfmtState *st) {
 }
 
 void print_complex_identifier_list(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "complex_identifier_list\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    switch (symbol) {
+      case anon_sym_COMMA:
+        fprintf(st->outfile, ", ");
+        break;
+      case sym_complex_identifier:
+        print_complex_identifier(child, st);
+        break;
+      case sym_comment:
+        print_comment_inline(child, st);
+        break;
+    }
+  }
 }
 
 void print_complex_string_literal(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "complex_string_literal\n");
+  char *text = get_node_text(node, st->source_code);
+  if (text) {
+    fprintf(st->outfile, "%s", text);
+    free(text);
+  }
 }
 
 void print_constant(TSNode node, PrpfmtState *st) {
@@ -447,11 +1219,11 @@ void print_constant(TSNode node, PrpfmtState *st) {
 }
 
 void print_delay_tok(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "delay_tok\n");
-}
-
-void print_description(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "description\n");
+  char *text = get_node_text(node, st->source_code);
+  if (text) {
+    fprintf(st->outfile, "%s", text);
+    free(text);
+  }
 }
 
 void print_dot_expression(TSNode node, PrpfmtState *st) {
@@ -473,11 +1245,47 @@ void print_dot_expression(TSNode node, PrpfmtState *st) {
 }
 
 void print_dot_expression_type(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "dot_expression_type\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    if (symbol == anon_sym_DOT) {
+      fprintf(st->outfile, ".");
+    } else if (symbol == sym_identifier) {
+      print_identifier(child, st);
+    } else if (symbol == sym_expression_type) {
+      print_expression_type(child, st);
+    } else if (symbol == sym_comment) {
+      print_comment_inline(child, st);
+    }
+  }
 }
 
 void print_enum_definition(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "enum_definition\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    const char *field_name = ts_node_field_name_for_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    if (field_name && strcmp(field_name, "input") == 0) {
+      print_arg_list(child, st);
+      continue;
+    }
+
+    switch (symbol) {
+      case anon_sym_enum:
+        fprintf(st->outfile, "enum ");
+        break;
+      case anon_sym_variant:
+        fprintf(st->outfile, "variant ");
+        break;
+      case sym_comment:
+        print_comment_inline(child, st);
+        break;
+    }
+  }
 }
 
 void print_expression_list(TSNode node, PrpfmtState *st) {
@@ -497,11 +1305,48 @@ void print_expression_list(TSNode node, PrpfmtState *st) {
 }
 
 void print_expression_type(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "expression_type\n");
+  TSSymbol symbol = ts_node_grammar_symbol(node);
+
+  switch (symbol) {
+    case sym_identifier:
+      print_identifier(node, st);
+      break;
+    case sym_dot_expression_type:
+      print_dot_expression_type(node, st);
+      break;
+    case sym_function_call_type:
+      print_function_call_type(node, st);
+      break;
+    case sym_tuple:
+      print_tuple(node, st);
+      break;
+    default:
+      // Handle the case where expression_type is a named node with children
+      {
+        uint32_t cc = ts_node_child_count(node);
+        if (cc > 0) {
+          for (uint32_t i = 0; i < cc; i++) {
+            TSNode child = ts_node_child(node, i);
+            print_expression_type(child, st);
+          }
+        } else {
+          char *text = get_node_text(node, st->source_code);
+          if (text) {
+            fprintf(st->outfile, "%s", text);
+            free(text);
+          }
+        }
+      }
+      break;
+  }
 }
 
 void print_flow_tok(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "flow_tok\n");
+  char *text = get_node_text(node, st->source_code);
+  if (text) {
+    fprintf(st->outfile, "%s", text);
+    free(text);
+  }
 }
 
 void print_for_comprehension(TSNode node, PrpfmtState *st) {
@@ -509,23 +1354,166 @@ void print_for_comprehension(TSNode node, PrpfmtState *st) {
 }
 
 void print_func_def_verification(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "func_def_verification\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    if (ts_node_child_count(child) == 0) {
+      char *text = get_node_text(child, st->source_code);
+      if (text) {
+        fprintf(st->outfile, " %s ", text);
+        free(text);
+      }
+    } else {
+      print__expression(child, st);
+    }
+  }
 }
 
 void print_function_call_expression(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "function_call_expression\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    const char *field_name = ts_node_field_name_for_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    if (field_name) {
+      if (strcmp(field_name, "function") == 0) {
+        print_complex_identifier(child, st);
+        continue;
+      }
+      if (strcmp(field_name, "argument") == 0) {
+        print_tuple(child, st);
+        continue;
+      }
+    }
+
+    if (symbol == sym_comment) {
+      print_comment_inline(child, st);
+    }
+  }
 }
 
 void print_function_call_type(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "function_call_type\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    const char *field_name = ts_node_field_name_for_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    if (field_name) {
+      if (strcmp(field_name, "function") == 0) {
+        print_complex_identifier(child, st);
+        continue;
+      }
+      if (strcmp(field_name, "argument") == 0) {
+        print_tuple(child, st);
+        continue;
+      }
+    }
+
+    if (symbol == sym_comment) {
+      print_comment_inline(child, st);
+    }
+  }
 }
 
 void print_function_definition(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "function_definition\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    const char *field_name = ts_node_field_name_for_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    if (field_name) {
+      if (strcmp(field_name, "lvalue") == 0) {
+        print_complex_identifier(child, st);
+        continue;
+      } else if (strcmp(field_name, "condition") == 0) {
+        fprintf(st->outfile, " where ");
+        print_expression_list(child, st);
+        continue;
+      } else if (strcmp(field_name, "verification") == 0) {
+        print_func_def_verification(child, st);
+        continue;
+      } else if (strcmp(field_name, "code") == 0) {
+        fprintf(st->outfile, " ");
+        print_scope_statement(child, st);
+        continue;
+      }
+    }
+
+    if (symbol == sym_function_definition_decl) {
+      print_function_definition_decl(child, st);
+    }
+  }
 }
 
 void print_function_definition_decl(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "function_definition_decl\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    const char *field_name = ts_node_field_name_for_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    if (field_name) {
+      if (strcmp(field_name, "generic") == 0) {
+        // Handled via symbols < > and typed_identifier_list
+      } else if (strcmp(field_name, "capture") == 0) {
+        // Handled via symbols [ ] and typed_identifier_list
+      } else if (strcmp(field_name, "pipe_config") == 0) {
+        fprintf(st->outfile, "::");
+        print_attribute_list(child, st);
+        continue;
+      } else if (strcmp(field_name, "input") == 0) {
+        if (symbol == sym_arg_list) {
+          print_arg_list(child, st);
+        } else {
+          uint32_t cc2 = ts_node_child_count(child);
+          for (uint32_t j = 0; j < cc2; j++) {
+            TSNode c2 = ts_node_child(child, j);
+            TSSymbol s2 = ts_node_grammar_symbol(c2);
+            if (s2 == anon_sym_LPAREN) {
+              fprintf(st->outfile, "(");
+            } else if (s2 == anon_sym_RPAREN) {
+              fprintf(st->outfile, ")");
+            }
+          }
+        }
+        continue;
+      } else if (strcmp(field_name, "output") == 0) {
+        // Handled via symbol -> and content
+      }
+    }
+
+    switch (symbol) {
+      case anon_sym_LT:
+        fprintf(st->outfile, "<");
+        break;
+      case anon_sym_GT:
+        fprintf(st->outfile, ">");
+        break;
+      case anon_sym_LBRACK:
+        fprintf(st->outfile, "[");
+        break;
+      case anon_sym_RBRACK:
+        fprintf(st->outfile, "]");
+        break;
+      case anon_sym_DASH_GT:
+        fprintf(st->outfile, " -> ");
+        break;
+      case sym_typed_identifier_list:
+        print_typed_identifier_list(child, st);
+        break;
+      case sym_arg_list:
+        print_arg_list(child, st);
+        break;
+      case sym_type_or_identifier:
+        print_type_or_identifier(child, st);
+        break;
+    }
+  }
 }
 
 void print_identifier(TSNode node, PrpfmtState *st) {
@@ -581,27 +1569,180 @@ void print_if_expression(TSNode node, PrpfmtState *st) {
 }
 
 void print_lvalue_item(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "lvalue_item\n");
+  uint32_t child_count = ts_node_child_count(node);
+  if (child_count == 0) {
+    char *text = get_node_text(node, st->source_code);
+    if (text) {
+      fprintf(st->outfile, "%s", text);
+      free(text);
+    }
+    return;
+  }
+
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    const char *field_name = ts_node_field_name_for_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    if (field_name) {
+      if (strcmp(field_name, "identifier") == 0) {
+        print_complex_identifier(child, st);
+        continue;
+      }
+      if (strcmp(field_name, "type") == 0) {
+        print_type_cast(child, st);
+        continue;
+      }
+    }
+
+    switch (symbol) {
+      case sym_typed_identifier:
+        print_typed_identifier(child, st);
+        break;
+      case sym_comment:
+        print_comment_inline(child, st);
+        break;
+    }
+  }
 }
 
 void print_lvalue_list(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "lvalue_list\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    switch (symbol) {
+      case anon_sym_COMMA:
+        fprintf(st->outfile, ", ");
+        break;
+      case sym_lvalue_item:
+        print_lvalue_item(child, st);
+        break;
+      case sym_comment:
+        print_comment_inline(child, st);
+        break;
+    }
+  }
 }
 
 void print_match_expression(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "match_expression\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    const char *field_name = ts_node_field_name_for_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    if (field_name) {
+      if (strcmp(field_name, "init") == 0) {
+        uint32_t cc2 = ts_node_child_count(child);
+        for (uint32_t j = 0; j < cc2; j++) {
+          TSNode c2 = ts_node_child(child, j);
+          TSSymbol s2 = ts_node_grammar_symbol(c2);
+          if (s2 == sym_stmt_list) {
+            print_stmt_list(c2, st);
+          } else if (s2 == anon_sym_SEMI) {
+            fprintf(st->outfile, " ; ");
+          }
+        }
+        continue;
+      } else if (strcmp(field_name, "condition") == 0) {
+        fprintf(st->outfile, " ");
+        print__expression(child, st);
+        continue;
+      } else if (strcmp(field_name, "match_list") == 0) {
+        print_match_list(child, st);
+        continue;
+      }
+    }
+
+    switch (symbol) {
+      case anon_sym_match:
+        fprintf(st->outfile, "match");
+        break;
+      case anon_sym_LBRACE:
+        fprintf(st->outfile, " {\n");
+        st->indent_level++;
+        break;
+      case anon_sym_RBRACE:
+        st->indent_level--;
+        print_indent(st);
+        fprintf(st->outfile, "}");
+        break;
+      case sym_comment:
+        print_comment_inline(child, st);
+        break;
+    }
+  }
 }
 
 void print_match_list(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "match_list\n");
+  uint32_t child_count = ts_node_child_count(node);
+  bool arm_started = false;
+
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    const char *field_name = ts_node_field_name_for_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    if (field_name) {
+      if (strcmp(field_name, "condition") == 0) {
+        if (!arm_started) {
+          print_indent(st);
+          arm_started = true;
+        }
+        if (symbol == anon_sym_else) {
+          fprintf(st->outfile, "else");
+        } else if (symbol == sym_match_operator) {
+          print_match_operator(child, st);
+          fprintf(st->outfile, " ");
+        } else if (symbol == sym_expression_list) {
+          print_expression_list(child, st);
+        } else {
+          // Fallback for nested seq
+          uint32_t cc2 = ts_node_child_count(child);
+          for (uint32_t j = 0; j < cc2; j++) {
+            TSNode c2 = ts_node_child(child, j);
+            TSSymbol s2 = ts_node_grammar_symbol(c2);
+            if (s2 == sym_match_operator) {
+              print_match_operator(c2, st);
+              fprintf(st->outfile, " ");
+            } else if (s2 == sym_expression_list) {
+              print_expression_list(c2, st);
+            }
+          }
+        }
+        continue;
+      }
+      if (strcmp(field_name, "code") == 0) {
+        fprintf(st->outfile, " ");
+        print_scope_statement(child, st);
+        fprintf(st->outfile, "\n");
+        arm_started = false;
+        continue;
+      }
+    }
+
+    if (symbol == sym_comment) {
+      print_comment_inline(child, st);
+    }
+  }
 }
 
 void print_match_operator(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "match_operator\n");
+  char *text = get_node_text(node, st->source_code);
+  if (text) {
+    fprintf(st->outfile, "%s", text);
+    free(text);
+  }
 }
 
 void print_member_select(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "member_select\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    print_select(child, st);
+  }
 }
 
 void print_member_selection(TSNode node, PrpfmtState *st) {
@@ -619,23 +1760,126 @@ void print_member_selection(TSNode node, PrpfmtState *st) {
 }
 
 void print_module_path(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "module_path\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    switch (symbol) {
+      case anon_sym_DOT:
+        fprintf(st->outfile, ".");
+        break;
+      case sym_identifier:
+        print_identifier(child, st);
+        break;
+      case sym_comment:
+        print_comment_inline(child, st);
+        break;
+    }
+  }
 }
 
 void print_optional_expression(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "optional_expression\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    const char *field_name = ts_node_field_name_for_child(node, i);
+
+    if (field_name) {
+      if (strcmp(field_name, "argument") == 0) {
+        print__expression(child, st);
+        continue;
+      }
+      if (strcmp(field_name, "operator") == 0) {
+        fprintf(st->outfile, "?");
+        continue;
+      }
+    }
+  }
 }
 
 void print_pipe_tok(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "pipe_tok\n");
+  char *text = get_node_text(node, st->source_code);
+  if (text) {
+    fprintf(st->outfile, "%s", text);
+    free(text);
+  }
 }
 
 void print_primitive_type(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "primitive_type\n");
+  uint32_t child_count = ts_node_child_count(node);
+  if (child_count == 0) {
+    char *text = get_node_text(node, st->source_code);
+    if (text) {
+      fprintf(st->outfile, "%s", text);
+      free(text);
+    }
+    return;
+  }
+
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    switch (symbol) {
+      case sym_unsized_integer_type:
+        print_unsized_integer_type(child, st);
+        break;
+      case sym_sized_integer_type:
+        print_sized_integer_type(child, st);
+        break;
+      case sym_bounded_integer_type:
+        print_bounded_integer_type(child, st);
+        break;
+      case sym_range_type:
+        print_range_type(child, st);
+        break;
+      case sym_string_type:
+        print_string_type(child, st);
+        break;
+      case sym_boolean_type:
+        print_boolean_type(child, st);
+        break;
+      case sym_type_type:
+        print_type_type(child, st);
+        break;
+      default:
+        if (ts_node_child_count(child) == 0) {
+          char *text = get_node_text(child, st->source_code);
+          if (text) {
+            fprintf(st->outfile, "%s", text);
+            free(text);
+          }
+        }
+        break;
+    }
+  }
 }
 
 void print_range_type(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "range_type\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    switch (symbol) {
+      case anon_sym_range:
+        fprintf(st->outfile, "range");
+        break;
+      case anon_sym_LPAREN:
+        fprintf(st->outfile, "(");
+        break;
+      case anon_sym_RPAREN:
+        fprintf(st->outfile, ")");
+        break;
+      case sym_select_options:
+        print_select_options(child, st);
+        break;
+      case sym_comment:
+        print_comment_inline(child, st);
+        break;
+    }
+  }
 }
 
 void print_ref_identifier(TSNode node, PrpfmtState *st) {
@@ -643,99 +1887,464 @@ void print_ref_identifier(TSNode node, PrpfmtState *st) {
 }
 
 void print_select(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "select\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    if (symbol == sym_select_options) {
+      print_select_options(child, st);
+    } else if (symbol == anon_sym_LBRACK) {
+      fprintf(st->outfile, "[");
+    } else if (symbol == anon_sym_RBRACK) {
+      fprintf(st->outfile, "]");
+    }
+  }
 }
 
 void print_select_options(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "select_options\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    switch (symbol) {
+      case sym_expression_list:
+        print_expression_list(child, st);
+        break;
+      case anon_sym_DOT_DOT:
+        fprintf(st->outfile, "..");
+        break;
+      case anon_sym_DOT_DOT_EQ:
+        fprintf(st->outfile, "..=");
+        break;
+      case anon_sym_DOT_DOT_LT:
+        fprintf(st->outfile, "..<");
+        break;
+      default:
+        print__expression(child, st);
+        break;
+    }
+  }
 }
 
 void print_selection(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "selection\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    switch (symbol) {
+      case sym_member_selection:
+        print_member_selection(child, st);
+        break;
+      case sym_bit_selection:
+        print_bit_selection(child, st);
+        break;
+    }
+  }
 }
 
 void print_sized_integer_type(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "sized_integer_type\n");
+  char *text = get_node_text(node, st->source_code);
+  if (text) {
+    fprintf(st->outfile, "%s", text);
+    free(text);
+  }
 }
 
 void print_stmt_list(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "stmt_list\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    switch (symbol) {
+      case anon_sym_SEMI:
+        fprintf(st->outfile, " ; ");
+        break;
+      case sym_comment:
+        print_comment_inline(child, st);
+        break;
+      default:
+        print__tuple_item(child, st);
+        break;
+    }
+  }
 }
 
 void print_string_type(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "string_type\n");
+  char *text = get_node_text(node, st->source_code);
+  if (text) {
+    fprintf(st->outfile, "%s", text);
+    free(text);
+  }
 }
 
 void print_timed_identifier(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "timed_identifier\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    const char *field_name = ts_node_field_name_for_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    if (field_name) {
+      if (strcmp(field_name, "identifier") == 0) {
+        print_identifier(child, st);
+        continue;
+      }
+      if (strcmp(field_name, "timing") == 0) {
+        if (symbol == sym_constant) {
+          print_constant(child, st);
+        } else {
+          print__expression(child, st);
+        }
+        continue;
+      }
+    }
+
+    switch (symbol) {
+      case anon_sym_AT:
+        fprintf(st->outfile, "@");
+        break;
+      case anon_sym_LBRACK:
+        fprintf(st->outfile, "[");
+        break;
+      case anon_sym_RBRACK:
+        fprintf(st->outfile, "]");
+        break;
+      case sym_comment:
+        print_comment_inline(child, st);
+        break;
+    }
+  }
 }
 
 void print_tuple(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "tuple\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    switch (symbol) {
+      case anon_sym_LPAREN:
+        fprintf(st->outfile, "(");
+        break;
+      case anon_sym_RPAREN:
+        fprintf(st->outfile, ")");
+        break;
+      case sym_tuple_list:
+        print_tuple_list(child, st);
+        break;
+      case sym_comment:
+        print_comment_inline(child, st);
+        break;
+    }
+  }
 }
 
 void print_tuple_list(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "tuple_list\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    switch (symbol) {
+      case anon_sym_COMMA:
+        fprintf(st->outfile, ",");
+        break;
+      case sym_comment:
+        print_comment_inline(child, st);
+        break;
+      default:
+        print__tuple_item(child, st);
+        break;
+    }
+  }
 }
 
 void print_tuple_sq(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "tuple_sq\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    switch (symbol) {
+      case anon_sym_LBRACK:
+        fprintf(st->outfile, "[");
+        break;
+      case anon_sym_RBRACK:
+        fprintf(st->outfile, "]");
+        break;
+      case sym_tuple_list:
+        print_tuple_list(child, st);
+        break;
+      case sym_comment:
+        print_comment_inline(child, st);
+        break;
+    }
+  }
 }
 
 void print_type_cast(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "type_cast\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    const char *field_name = ts_node_field_name_for_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    if (field_name) {
+      if (strcmp(field_name, "type") == 0) {
+        print__type(child, st);
+        continue;
+      }
+      if (strcmp(field_name, "attribute") == 0) {
+        print_attributes(child, st);
+        continue;
+      }
+    }
+
+    if (symbol == anon_sym_COLON) {
+      fprintf(st->outfile, ":");
+    }
+  }
 }
 
 void print_type_or_identifier(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "type_or_identifier\n");
+  TSSymbol symbol = ts_node_grammar_symbol(node);
+
+  switch (symbol) {
+    case sym_typed_identifier:
+      print_typed_identifier(node, st);
+      break;
+    case sym_primitive_type:
+      print_primitive_type(node, st);
+      break;
+    case sym_identifier:
+      print_identifier(node, st);
+      break;
+    default:
+      {
+        uint32_t cc = ts_node_child_count(node);
+        if (cc > 0) {
+          for (uint32_t i = 0; i < cc; i++) {
+            TSNode child = ts_node_child(node, i);
+            print_type_or_identifier(child, st);
+          }
+        } else {
+          char *text = get_node_text(node, st->source_code);
+          if (text) {
+            fprintf(st->outfile, "%s", text);
+            free(text);
+          }
+        }
+      }
+      break;
+  }
 }
 
 void print_type_specification(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "type_specification\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    const char *field_name = ts_node_field_name_for_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    if (field_name) {
+      if (strcmp(field_name, "argument") == 0) {
+        print__restricted_expression(child, st);
+        continue;
+      }
+      if (strcmp(field_name, "type") == 0) {
+        print__type(child, st);
+        continue;
+      }
+      if (strcmp(field_name, "attribute") == 0) {
+        print_attributes(child, st);
+        continue;
+      }
+    }
+
+    if (symbol == anon_sym_COLON) {
+      fprintf(st->outfile, ":");
+    }
+  }
 }
 
 void print_type_type(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "type_type\n");
+  char *text = get_node_text(node, st->source_code);
+  if (text) {
+    fprintf(st->outfile, "%s", text);
+    free(text);
+  }
 }
 
 void print_typed_declaration(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "typed_declaration\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    const char *field_name = ts_node_field_name_for_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    if (field_name) {
+      if (strcmp(field_name, "decl") == 0) {
+        print_var_or_let_or_reg(child, st);
+        fprintf(st->outfile, " ");
+        continue;
+      }
+      if (strcmp(field_name, "lvalue") == 0) {
+        print_typed_identifier(child, st);
+        continue;
+      }
+    }
+
+    if (symbol == sym_comment) {
+      print_comment_inline(child, st);
+    }
+  }
 }
 
 void print_typed_identifier(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "typed_identifier\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    const char *field_name = ts_node_field_name_for_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    if (field_name) {
+      if (strcmp(field_name, "identifier") == 0) {
+        print_identifier(child, st);
+        continue;
+      }
+      if (strcmp(field_name, "type") == 0) {
+        print_type_cast(child, st);
+        continue;
+      }
+      if (strcmp(field_name, "timing") == 0) {
+        if (symbol == sym_constant) {
+          print_constant(child, st);
+        } else {
+          // Handle seq('[', $._expression, ']') if it's not a named node
+          // or just call print__expression if it matches
+          print__expression(child, st);
+        }
+        continue;
+      }
+    }
+
+    switch (symbol) {
+      case anon_sym_AT: fprintf(st->outfile, "@"); break;
+      case anon_sym_LBRACK: fprintf(st->outfile, "["); break;
+      case anon_sym_RBRACK: fprintf(st->outfile, "]"); break;
+    }
+  }
 }
 
 void print_typed_identifier_list(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "typed_identifier_list\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    switch (symbol) {
+      case anon_sym_COMMA:
+        fprintf(st->outfile, ", ");
+        break;
+      case sym_typed_identifier:
+        print_typed_identifier(child, st);
+        break;
+      case sym_comment:
+        print_comment_inline(child, st);
+        break;
+    }
+  }
 }
 
 void print_unary_expression(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "unary_expression\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    const char *field_name = ts_node_field_name_for_child(node, i);
+
+    if (field_name) {
+      if (strcmp(field_name, "operator") == 0) {
+        char *text = get_node_text(child, st->source_code);
+        if (text) {
+          fprintf(st->outfile, "%s", text);
+          if (strcmp(text, "not") == 0) {
+            fprintf(st->outfile, " ");
+          }
+          free(text);
+        }
+        continue;
+      }
+      if (strcmp(field_name, "argument") == 0) {
+        print__expression(child, st);
+        continue;
+      }
+    }
+  }
 }
 
 void print_unsized_integer_type(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "unsized_integer_type\n");
+  char *text = get_node_text(node, st->source_code);
+  if (text) {
+    fprintf(st->outfile, "%s", text);
+    free(text);
+  }
 }
 
 void print_var_or_let_or_reg(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "var_or_let_or_reg\n");
+  char *text = get_node_text(node, st->source_code);
+  if (text) {
+    fprintf(st->outfile, "%s", text);
+    free(text);
+  }
 }
 
 void print_when_unless_cond(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "when_unless_cond\n");
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+    const char *field_name = ts_node_field_name_for_child(node, i);
+
+    if (field_name && strcmp(field_name, "condition") == 0) {
+      fprintf(st->outfile, " ");
+      print__expression(child, st);
+      continue;
+    }
+
+    if (symbol == anon_sym_when) {
+      fprintf(st->outfile, "when");
+    } else if (symbol == anon_sym_unless) {
+      fprintf(st->outfile, "unless");
+    }
+  }
 }
 
 void print__binary_number(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "_binary_number\n");
+  char *text = get_node_text(node, st->source_code);
+  if (text) {
+    fprintf(st->outfile, "%s", text);
+    free(text);
+  }
 }
 
 void print__bool_literal(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "_bool_literal\n");
+  char *text = get_node_text(node, st->source_code);
+  if (text) {
+    fprintf(st->outfile, "%s", text);
+    free(text);
+  }
 }
 
 void print__decimal_number(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "_decimal_number\n");
+  char *text = get_node_text(node, st->source_code);
+  if (text) {
+    fprintf(st->outfile, "%s", text);
+    free(text);
+  }
 }
 
 void print__expression(TSNode node, PrpfmtState *st) {
@@ -780,43 +2389,133 @@ void print__expression_with_comprehension(TSNode node, PrpfmtState *st) {
 }
 
 void print__hex_number(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "_hex_number\n");
+  char *text = get_node_text(node, st->source_code);
+  if (text) {
+    fprintf(st->outfile, "%s", text);
+    free(text);
+  }
 }
 
 void print__neg_binary_number(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "_neg_binary_number\n");
+  char *text = get_node_text(node, st->source_code);
+  if (text) {
+    fprintf(st->outfile, "%s", text);
+    free(text);
+  }
 }
 
 void print__neg_decimal_number(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "_neg_decimal_number\n");
+  char *text = get_node_text(node, st->source_code);
+  if (text) {
+    fprintf(st->outfile, "%s", text);
+    free(text);
+  }
 }
 
 void print__neg_hex_number(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "_neg_hex_number\n");
+  char *text = get_node_text(node, st->source_code);
+  if (text) {
+    fprintf(st->outfile, "%s", text);
+    free(text);
+  }
 }
 
 void print__neg_octal_number(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "_neg_octal_number\n");
+  char *text = get_node_text(node, st->source_code);
+  if (text) {
+    fprintf(st->outfile, "%s", text);
+    free(text);
+  }
 }
 
 void print__neg_scaled_number(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "_neg_scaled_number\n");
+  char *text = get_node_text(node, st->source_code);
+  if (text) {
+    fprintf(st->outfile, "%s", text);
+    free(text);
+  }
 }
 
 void print__neg_simple_number(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "_neg_simple_number\n");
+  char *text = get_node_text(node, st->source_code);
+  if (text) {
+    fprintf(st->outfile, "%s", text);
+    free(text);
+  }
 }
 
 void print__neg_typed_number(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "_neg_typed_number\n");
+  char *text = get_node_text(node, st->source_code);
+  if (text) {
+    fprintf(st->outfile, "%s", text);
+    free(text);
+  }
 }
 
 void print__number(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "_number\n");
+  TSSymbol symbol = ts_node_grammar_symbol(node);
+
+  switch (symbol) {
+    case sym__neg_simple_number:
+      print__neg_simple_number(node, st);
+      break;
+    case sym__neg_scaled_number:
+      print__neg_scaled_number(node, st);
+      break;
+    case sym__neg_hex_number:
+      print__neg_hex_number(node, st);
+      break;
+    case sym__neg_decimal_number:
+      print__neg_decimal_number(node, st);
+      break;
+    case sym__neg_octal_number:
+      print__neg_octal_number(node, st);
+      break;
+    case sym__neg_binary_number:
+      print__neg_binary_number(node, st);
+      break;
+    case sym__neg_typed_number:
+      print__neg_typed_number(node, st);
+      break;
+    case sym__simple_number:
+      print__simple_number(node, st);
+      break;
+    case sym__scaled_number:
+      print__scaled_number(node, st);
+      break;
+    case sym__hex_number:
+      print__hex_number(node, st);
+      break;
+    case sym__decimal_number:
+      print__decimal_number(node, st);
+      break;
+    case sym__octal_number:
+      print__octal_number(node, st);
+      break;
+    case sym__binary_number:
+      print__binary_number(node, st);
+      break;
+    case sym__typed_number:
+      print__typed_number(node, st);
+      break;
+    default:
+      if (ts_node_child_count(node) == 0) {
+        char *text = get_node_text(node, st->source_code);
+        if (text) {
+          fprintf(st->outfile, "%s", text);
+          free(text);
+        }
+      }
+      break;
+  }
 }
 
 void print__octal_number(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "_octal_number\n");
+  char *text = get_node_text(node, st->source_code);
+  if (text) {
+    fprintf(st->outfile, "%s", text);
+    free(text);
+  }
 }
 
 void print__restricted_expression(TSNode node, PrpfmtState *st) {
@@ -861,7 +2560,11 @@ void print__restricted_expression(TSNode node, PrpfmtState *st) {
 }
 
 void print__scaled_number(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "_scaled_number\n");
+  char *text = get_node_text(node, st->source_code);
+  if (text) {
+    fprintf(st->outfile, "%s", text);
+    free(text);
+  }
 }
 
 void print__semicolon(TSNode node, PrpfmtState *st) {
@@ -879,11 +2582,19 @@ void print__semicolon(TSNode node, PrpfmtState *st) {
 }
 
 void print__simple_number(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "_simple_number\n");
+  char *text = get_node_text(node, st->source_code);
+  if (text) {
+    fprintf(st->outfile, "%s", text);
+    free(text);
+  }
 }
 
 void print__simple_string_literal(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "_simple_string_literal\n");
+  char *text = get_node_text(node, st->source_code);
+  if (text) {
+    fprintf(st->outfile, "%s", text);
+    free(text);
+  }
 }
 
 void print__space(TSNode node, PrpfmtState *st) {
@@ -891,7 +2602,13 @@ void print__space(TSNode node, PrpfmtState *st) {
 }
 
 void print__string_literal(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "_string_literal\n");
+  TSSymbol symbol = ts_node_grammar_symbol(node);
+
+  if (symbol == sym__simple_string_literal) {
+    print__simple_string_literal(node, st);
+  } else {
+    print_complex_string_literal(node, st);
+  }
 }
 
 void print__timing_sequence(TSNode node, PrpfmtState *st) {
@@ -899,19 +2616,69 @@ void print__timing_sequence(TSNode node, PrpfmtState *st) {
 }
 
 void print__tuple_item(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "_tuple_item\n");
+  TSSymbol symbol = ts_node_grammar_symbol(node);
+
+  switch (symbol) {
+    case sym_ref_identifier:
+      print_ref_identifier(node, st);
+      break;
+    case sym_assignment:
+      print_assignment(node, st);
+      break;
+    case sym_typed_declaration:
+      print_typed_declaration(node, st);
+      break;
+    case sym_lambda:
+      print_lambda(node, st);
+      break;
+    default:
+      print__expression_with_comprehension(node, st);
+      break;
+  }
 }
 
 void print__type(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "_type\n");
+  TSSymbol symbol = ts_node_grammar_symbol(node);
+
+  switch (symbol) {
+    case sym_primitive_type:
+      print_primitive_type(node, st);
+      break;
+    case sym_array_type:
+      print_array_type(node, st);
+      break;
+    case sym_lambda:
+      print_lambda(node, st);
+      break;
+    case sym_expression_type:
+      print_expression_type(node, st);
+      break;
+    default:
+      if (ts_node_child_count(node) == 0) {
+        char *text = get_node_text(node, st->source_code);
+        if (text) {
+          fprintf(st->outfile, "%s", text);
+          free(text);
+        }
+      }
+      break;
+  }
 }
 
 void print__typed_number(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "_typed_number\n");
+  char *text = get_node_text(node, st->source_code);
+  if (text) {
+    fprintf(st->outfile, "%s", text);
+    free(text);
+  }
 }
 
 void print__unknown_literal(TSNode node, PrpfmtState *st) {
-    fprintf(st->outfile, "_unknown_literal\n");
+  char *text = get_node_text(node, st->source_code);
+  if (text) {
+    fprintf(st->outfile, "%s", text);
+    free(text);
+  }
 }
 
 
