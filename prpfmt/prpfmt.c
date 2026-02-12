@@ -22,7 +22,7 @@ void print_comment(TSNode node, const char *source_code, FILE *outfile) {
 
   char *node_text = get_node_text(node, source_code);
   if (node_text) {
-    fprintf(outfile, "%s", node_text);
+    fprintf(outfile, "%s\n", node_text);
     free(node_text);
   }
 }
@@ -31,8 +31,64 @@ void print_statement(TSNode node, const char *source_code, FILE *outfile) {
   // Check if comment
   if (ts_node_grammar_symbol(node) == sym_comment) {
     print_comment(node, source_code, outfile);
-  } else {
-    fprintf(outfile, "statement\n");
+    return;
+  }
+
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    TSSymbol symbol = ts_node_grammar_symbol(child);
+
+    switch (symbol) {
+      case sym_assignment_or_declaration_statement:
+        print_assignment_or_declaration_statement(child, source_code, outfile);
+        break;
+      case sym_control_statement:
+        print_control_statement(child, source_code, outfile);
+        break;
+      case sym_declaration_statement:
+        print_declaration_statement(child, source_code, outfile);
+        break;
+      case sym_enum_assignment_statement:
+        print_enum_assignment_statement(child, source_code, outfile);
+        break;
+      case sym_expression_statement:
+        print_expression_statement(child, source_code, outfile);
+        break;
+      case sym_for_statement:
+        print_for_statement(child, source_code, outfile);
+        break;
+      case sym_function_call_statement:
+        print_function_call_statement(child, source_code, outfile);
+        break;
+      case sym_impl_statement:
+        print_impl_statement(child, source_code, outfile);
+        break;
+      case sym_import_statement:
+        print_import_statement(child, source_code, outfile);
+        break;
+      case sym_lambda:
+        print_lambda(child, source_code, outfile);
+        break;
+      case sym_loop_statement:
+        print_loop_statement(child, source_code, outfile);
+        break;
+      case sym_scope_statement:
+        print_scope_statement(child, source_code, outfile);
+        break;
+      case sym_test_statement:
+        print_test_statement(child, source_code, outfile);
+        break;
+      case sym_type_statement:
+        print_type_statement(child, source_code, outfile);
+        break;
+      case sym_while_statement:
+        print_while_statement(child, source_code, outfile);
+        break;
+      case sym_comment:
+        print_comment(child, source_code, outfile);
+        break;
+    }
   }
 }
 
@@ -53,7 +109,12 @@ void print_enum_assignment_statement(TSNode node, const char *source_code, FILE 
 }
 
 void print_expression_statement(TSNode node, const char *source_code, FILE *outfile) {
-    fprintf(outfile, "expression_statement\n");
+  // TODO: check this
+  uint32_t child_count = ts_node_child_count(node);
+  for (uint32_t i = 0; i < child_count; i++) {
+    TSNode child = ts_node_child(node, i);
+    print__expression_with_comprehension(child, source_code, outfile);
+  }
 }
 
 void print_for_statement(TSNode node, const char *source_code, FILE *outfile) {
@@ -409,7 +470,15 @@ void print__expression(TSNode node, const char *source_code, FILE *outfile) {
 }
 
 void print__expression_with_comprehension(TSNode node, const char *source_code, FILE *outfile) {
-    fprintf(outfile, "_expression_with_comprehension\n");
+  TSSymbol symbol = ts_node_grammar_symbol(node);
+
+  switch (symbol) {
+    case sym_for_comprehension:
+      print_for_comprehension(node, source_code, outfile);
+      break;
+    default:
+      print__expression(node, source_code, outfile);
+  }
 }
 
 void print__hex_number(TSNode node, const char *source_code, FILE *outfile) {
