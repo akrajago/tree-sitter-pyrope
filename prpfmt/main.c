@@ -50,6 +50,22 @@ char *file_to_string(char *infile) {
   return buffer;
 }
 
+void cleanup(char *source_code, TSTree *tree, TSParser *parser, FILE *outfile) {
+  // Free any allocated memory
+  if (source_code) {
+    free(source_code);
+  }
+  if (tree) {
+    ts_tree_delete(tree);
+  }
+  if (parser) {
+    ts_parser_delete(parser);
+  }
+  if (outfile != stdout) {
+    fclose(outfile);
+  }
+}
+
 int main(int argc, char **argv) {
   // Check if input file provided
   if (argc < 2) {
@@ -101,6 +117,8 @@ int main(int argc, char **argv) {
   if (!ts_parser_set_language(parser, tree_sitter_pyrope())) {
     fprintf(stderr, "Error: the language was generated with an "
                     "incompatible version of the tree-sitter CLI.\n");
+    cleanup(NULL, NULL, parser, outfile);
+    exit(1);
   }
 
   // Parse the source code
@@ -108,17 +126,20 @@ int main(int argc, char **argv) {
   TSTree *tree =
       ts_parser_parse_string(parser, NULL, source_code, strlen(source_code));
 
+  // Check if tree has any ERROR or MISSING nodes
+  TSNode root = ts_tree_root_node(tree);
+
+  if (ts_node_has_error(root)) {
+    fprintf(stderr, "Error: the provided code was unable to be parsed.\n");
+    cleanup(source_code, tree, parser, outfile);
+    exit(1);
+  }
+
   // test_print_all_nodes(tree, source_code);
   print_tree(tree, source_code, outfile);
 
-  // Free the memory
-  free(source_code);
-  ts_tree_delete(tree);
-  ts_parser_delete(parser);
-
-  if (outfile != stdout) {
-    fclose(outfile);
-  }
+  // Free memory
+  cleanup(source_code, tree, parser, outfile);
 
   return 0;
 }
