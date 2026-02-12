@@ -9,6 +9,7 @@ typedef struct {
   FILE *outfile;
   int indent_level;
   int indent_size;
+  bool fmt_on;
 } PrpfmtState;
 
 // Symbol enum from tree-sitter-pyrope/src/parser.c
@@ -254,6 +255,10 @@ enum {
 };
 
 void print_tree(TSTree *tree, PrpfmtState *st);
+
+void check_format_directives(const char *node_text, PrpfmtState *st);
+
+void print_comment(TSNode node, PrpfmtState *st);
 
 // Root children: comment, statement
 void print_comment_inline(TSNode node, PrpfmtState *st);

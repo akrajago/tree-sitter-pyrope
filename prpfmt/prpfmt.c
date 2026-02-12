@@ -11,6 +11,14 @@ void print_indent(PrpfmtState *st) {
   }
 }
 
+void check_format_directives(const char *node_text, PrpfmtState *st) {
+  if (strstr(node_text, "prpfmt off")) {
+    st->fmt_on = false;
+  } else if (strstr(node_text, "prpfmt on")) {
+    st->fmt_on = true;
+  }
+}
+
 void print_tree(TSTree *tree, PrpfmtState *st) {
   // Get root and child info
   TSNode root_node = ts_tree_root_node(tree);
@@ -23,11 +31,29 @@ void print_tree(TSTree *tree, PrpfmtState *st) {
   }
 }
 
+void print_comment(TSNode node, PrpfmtState *st) {
+  TSNode prev = ts_node_prev_sibling(node);
+  if (ts_node_is_null(prev)) {
+    print_comment_newline(node, st);
+    return;
+  }
+
+  TSPoint start = ts_node_start_point(node);
+  TSPoint prev_end = ts_node_end_point(prev);
+
+  if (start.row == prev_end.row) {
+    print_comment_inline(node, st);
+  } else {
+    print_comment_newline(node, st);
+  }
+}
+
 void print_comment_inline(TSNode node, PrpfmtState *st) {
   char *node_text = get_node_text(node, st->source_code);
   if (node_text) {
+    check_format_directives(node_text, st);
     fprintf(st->outfile, " %s", node_text);
-    if (strncmp(node_text, "//", 2) == 0) {
+    if (!ts_node_is_null(ts_node_next_sibling(node))) {
       fprintf(st->outfile, "\n");
     }
     free(node_text);
@@ -37,6 +63,7 @@ void print_comment_inline(TSNode node, PrpfmtState *st) {
 void print_comment_newline(TSNode node, PrpfmtState *st) {
   char *node_text = get_node_text(node, st->source_code);
   if (node_text) {
+    check_format_directives(node_text, st);
     print_indent(st);
     fprintf(st->outfile, "%s\n", node_text);
     free(node_text);
@@ -45,7 +72,17 @@ void print_comment_newline(TSNode node, PrpfmtState *st) {
 
 void print_statement(TSNode node, PrpfmtState *st) {
   if (ts_node_grammar_symbol(node) == sym_comment) {
-    print_comment_newline(node, st);
+    print_comment(node, st);
+    return;
+  }
+
+  if (!st->fmt_on) {
+    char *node_text = get_node_text(node, st->source_code);
+    if (node_text) {
+      print_indent(st);
+      fprintf(st->outfile, "%s\n", node_text);
+      free(node_text);
+    }
     return;
   }
 
@@ -105,10 +142,20 @@ void print_statement(TSNode node, PrpfmtState *st) {
         print_while_statement(child, st);
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
     }
   }
+
+  TSNode next = ts_node_next_sibling(node);
+  if (!ts_node_is_null(next) && ts_node_grammar_symbol(next) == sym_comment) {
+    TSPoint end = ts_node_end_point(node);
+    TSPoint nstart = ts_node_start_point(next);
+    if (end.row == nstart.row) {
+      return;
+    }
+  }
+
   fprintf(st->outfile, "\n");
 }
 
@@ -128,7 +175,7 @@ void print_assignment_or_declaration_statement(TSNode node, PrpfmtState *st) {
         print__semicolon(child, st);
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
     }
   }
@@ -163,7 +210,7 @@ void print_control_statement(TSNode node, PrpfmtState *st) {
         print__semicolon(child, st);
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
     }
   }
@@ -205,7 +252,7 @@ void print_declaration_statement(TSNode node, PrpfmtState *st) {
         print__semicolon(child, st);
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
     }
   }
@@ -222,7 +269,7 @@ void print_enum_assignment_statement(TSNode node, PrpfmtState *st) {
     } else if (symbol == sym_when_unless_cond || symbol == anon_sym_SEMI || symbol == sym__automatic_semicolon) {
       print__semicolon(child, st);
     } else if (symbol == sym_comment) {
-      print_comment_inline(child, st);
+      print_comment(child, st);
     }
   }
 }
@@ -244,7 +291,7 @@ void print_expression_statement(TSNode node, PrpfmtState *st) {
         print__semicolon(child, st);
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
       default:
         print__expression(child, st);
@@ -338,7 +385,7 @@ void print_for_statement(TSNode node, PrpfmtState *st) {
         print_ref_identifier(child, st);
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
     }
   }
@@ -368,7 +415,7 @@ void print_function_call_statement(TSNode node, PrpfmtState *st) {
     }
 
     if (symbol == sym_comment) {
-      print_comment_inline(child, st);
+      print_comment(child, st);
     }
   }
 }
@@ -404,7 +451,7 @@ void print_impl_statement(TSNode node, PrpfmtState *st) {
         print__semicolon(child, st);
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
     }
   }
@@ -445,7 +492,7 @@ void print_import_statement(TSNode node, PrpfmtState *st) {
         print__semicolon(child, st);
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
     }
   }
@@ -556,7 +603,7 @@ void print_loop_statement(TSNode node, PrpfmtState *st) {
         fprintf(st->outfile, "loop ");
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
     }
   }
@@ -582,7 +629,7 @@ void print_scope_statement(TSNode node, PrpfmtState *st) {
         fprintf(st->outfile, "}");
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
     }
   }
@@ -627,7 +674,7 @@ void print_test_statement(TSNode node, PrpfmtState *st) {
         fprintf(st->outfile, "test");
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
     }
   }
@@ -690,7 +737,7 @@ void print_type_statement(TSNode node, PrpfmtState *st) {
         print__semicolon(child, st);
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
     }
   }
@@ -759,7 +806,7 @@ void print_while_statement(TSNode node, PrpfmtState *st) {
         fprintf(st->outfile, "while ");
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
     }
   }
@@ -818,7 +865,7 @@ void print_assignment(TSNode node, PrpfmtState *st) {
     switch (symbol) {
       case anon_sym_LPAREN: fprintf(st->outfile, "("); break;
       case anon_sym_RPAREN: fprintf(st->outfile, ")"); break;
-      case sym_comment: print_comment_inline(child, st); break;
+      case sym_comment: print_comment(child, st); break;
     }
   }
 }
@@ -856,7 +903,7 @@ void print_enum_assignment(TSNode node, PrpfmtState *st) {
         fprintf(st->outfile, " = ");
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
     }
   }
@@ -907,7 +954,7 @@ void print_arg_item(TSNode node, PrpfmtState *st) {
     if (symbol == sym_typed_identifier) {
       print_typed_identifier(child, st);
     } else if (symbol == sym_comment) {
-      print_comment_inline(child, st);
+      print_comment(child, st);
     }
   }
 }
@@ -926,7 +973,7 @@ void print_arg_item_list(TSNode node, PrpfmtState *st) {
         print_arg_item(child, st);
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
     }
   }
@@ -949,7 +996,7 @@ void print_arg_list(TSNode node, PrpfmtState *st) {
         print_arg_item_list(child, st);
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
     }
   }
@@ -987,7 +1034,7 @@ void print_array_type(TSNode node, PrpfmtState *st) {
     }
 
     if (symbol == sym_comment) {
-      print_comment_inline(child, st);
+      print_comment(child, st);
     }
   }
 }
@@ -1012,7 +1059,7 @@ void print_assignment_delay(TSNode node, PrpfmtState *st) {
         fprintf(st->outfile, "]");
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
       default:
         print__expression(child, st);
@@ -1047,7 +1094,7 @@ void print_attribute_item(TSNode node, PrpfmtState *st) {
     if (symbol == sym_assignment) {
       print_assignment(child, st);
     } else if (symbol == sym_comment) {
-      print_comment_inline(child, st);
+      print_comment(child, st);
     } else {
       print__expression(child, st);
     }
@@ -1068,7 +1115,7 @@ void print_attribute_item_list(TSNode node, PrpfmtState *st) {
         print_attribute_item(child, st);
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
     }
   }
@@ -1091,7 +1138,7 @@ void print_attribute_list(TSNode node, PrpfmtState *st) {
         print_attribute_item_list(child, st);
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
     }
   }
@@ -1257,7 +1304,7 @@ void print_complex_identifier(TSNode node, PrpfmtState *st) {
         print_timed_identifier(child, st);
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
       default:
         // If child is a token, print it
@@ -1287,7 +1334,7 @@ void print_complex_identifier_list(TSNode node, PrpfmtState *st) {
         print_complex_identifier(child, st);
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
     }
   }
@@ -1348,7 +1395,7 @@ void print_dot_expression_type(TSNode node, PrpfmtState *st) {
     } else if (symbol == sym_expression_type) {
       print_expression_type(child, st);
     } else if (symbol == sym_comment) {
-      print_comment_inline(child, st);
+      print_comment(child, st);
     }
   }
 }
@@ -1373,7 +1420,7 @@ void print_enum_definition(TSNode node, PrpfmtState *st) {
         fprintf(st->outfile, "variant ");
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
     }
   }
@@ -1388,7 +1435,7 @@ void print_expression_list(TSNode node, PrpfmtState *st) {
     if (symbol == anon_sym_COMMA) {
       fprintf(st->outfile, ", ");
     } else if (symbol == sym_comment) {
-      print_comment_inline(child, st);
+      print_comment(child, st);
     } else {
       print__expression(child, st);
     }
@@ -1486,7 +1533,7 @@ void print_for_comprehension(TSNode node, PrpfmtState *st) {
         print_typed_identifier(child, st);
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
     }
   }
@@ -1529,7 +1576,7 @@ void print_function_call_expression(TSNode node, PrpfmtState *st) {
     }
 
     if (symbol == sym_comment) {
-      print_comment_inline(child, st);
+      print_comment(child, st);
     }
   }
 }
@@ -1553,7 +1600,7 @@ void print_function_call_type(TSNode node, PrpfmtState *st) {
     }
 
     if (symbol == sym_comment) {
-      print_comment_inline(child, st);
+      print_comment(child, st);
     }
   }
 }
@@ -1782,7 +1829,7 @@ void print_if_expression(TSNode node, PrpfmtState *st) {
         fprintf(st->outfile, " else");
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
     }
   }
@@ -1820,7 +1867,7 @@ void print_lvalue_item(TSNode node, PrpfmtState *st) {
         print_typed_identifier(child, st);
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
     }
   }
@@ -1840,7 +1887,7 @@ void print_lvalue_list(TSNode node, PrpfmtState *st) {
         print_lvalue_item(child, st);
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
     }
   }
@@ -1897,7 +1944,7 @@ void print_match_expression(TSNode node, PrpfmtState *st) {
         fprintf(st->outfile, "}");
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
     }
   }
@@ -1951,7 +1998,7 @@ void print_match_list(TSNode node, PrpfmtState *st) {
     }
 
     if (symbol == sym_comment) {
-      print_comment_inline(child, st);
+      print_comment(child, st);
     }
   }
 }
@@ -2000,7 +2047,7 @@ void print_module_path(TSNode node, PrpfmtState *st) {
         print_identifier(child, st);
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
     }
   }
@@ -2103,7 +2150,7 @@ void print_range_type(TSNode node, PrpfmtState *st) {
         print_select_options(child, st);
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
     }
   }
@@ -2123,7 +2170,7 @@ void print_ref_identifier(TSNode node, PrpfmtState *st) {
         print_complex_identifier(child, st);
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
     }
   }
@@ -2207,7 +2254,7 @@ void print_stmt_list(TSNode node, PrpfmtState *st) {
         fprintf(st->outfile, " ; ");
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
       default:
         print__tuple_item(child, st);
@@ -2257,7 +2304,7 @@ void print_timed_identifier(TSNode node, PrpfmtState *st) {
         fprintf(st->outfile, "]");
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
     }
   }
@@ -2280,7 +2327,7 @@ void print_tuple(TSNode node, PrpfmtState *st) {
         print_tuple_list(child, st);
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
     }
   }
@@ -2297,7 +2344,7 @@ void print_tuple_list(TSNode node, PrpfmtState *st) {
         fprintf(st->outfile, ",");
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
       default:
         print__tuple_item(child, st);
@@ -2323,7 +2370,7 @@ void print_tuple_sq(TSNode node, PrpfmtState *st) {
         print_tuple_list(child, st);
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
     }
   }
@@ -2442,7 +2489,7 @@ void print_typed_declaration(TSNode node, PrpfmtState *st) {
     }
 
     if (symbol == sym_comment) {
-      print_comment_inline(child, st);
+      print_comment(child, st);
     }
   }
 }
@@ -2497,7 +2544,7 @@ void print_typed_identifier_list(TSNode node, PrpfmtState *st) {
         print_typed_identifier(child, st);
         break;
       case sym_comment:
-        print_comment_inline(child, st);
+        print_comment(child, st);
         break;
     }
   }

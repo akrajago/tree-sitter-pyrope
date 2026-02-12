@@ -12,8 +12,6 @@ TEST_FILES_DIR = "../full_pyrope"
 def normalize(text):
     # Remove comments (// style)
     text = re.sub(r'//.*', '', text)
-    # Remove comments (/* ... */ style)
-    text = re.sub(r'/\*.*?\*/', '', text, flags=re.DOTALL)
     # Remove semicolons
     text = text.replace(';', '')
     # Remove all whitespace

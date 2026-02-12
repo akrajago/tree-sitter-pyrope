@@ -140,7 +140,8 @@ int main(int argc, char **argv) {
     .source_code = source_code,
     .outfile = outfile,
     .indent_level = 0,
-    .indent_size = 2
+    .indent_size = 2,
+    .fmt_on = true
   };
 
   // test_print_all_nodes(tree, source_code);
