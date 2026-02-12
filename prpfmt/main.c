@@ -61,7 +61,7 @@ void cleanup(char *source_code, TSTree *tree, TSParser *parser, FILE *outfile) {
   if (parser) {
     ts_parser_delete(parser);
   }
-  if (outfile != stdout) {
+  if (outfile && outfile != stdout) {
     fclose(outfile);
   }
 }
@@ -135,8 +135,16 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
+  // Initialize state
+  PrpfmtState state = {
+    .source_code = source_code,
+    .outfile = outfile,
+    .indent_level = 0,
+    .indent_size = 2
+  };
+
   // test_print_all_nodes(tree, source_code);
-  print_tree(tree, source_code, outfile);
+  print_tree(tree, &state);
 
   // Free memory
   cleanup(source_code, tree, parser, outfile);
