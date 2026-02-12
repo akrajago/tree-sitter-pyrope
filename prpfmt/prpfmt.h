@@ -248,7 +248,8 @@ enum {
 void print_tree(TSTree *tree, char *source_code, FILE *outfile);
 
 // Root children: comment, statement
-void print_comment(TSNode node, const char *source_code, FILE *outfile);
+void print_comment_inline(TSNode node, const char *source_code, FILE *outfile);
+void print_comment_newline(TSNode node, const char *source_code, FILE *outfile);
 void print_statement(TSNode node, const char *source_code, FILE *outfile);
 
 // Statement children
